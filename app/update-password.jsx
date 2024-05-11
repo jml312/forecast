@@ -19,12 +19,13 @@ export default function UpdatePassword() {
   const { colorScheme } = useColorScheme();
 
   const validationSchema = object({
+    confirmPassword: string()
+      .required("Please confirm your password")
+      .oneOf([ref("password")],
     password: string()
       .required("Please enter your password")
       .min(6, "Password must be at least 6 characters"),
-    confirmPassword: string()
-      .required("Please confirm your password")
-      .oneOf([ref("password")], "Passwords must match"),
+     "Passwords must match")
   });
 
   const onUpdatePassword = async () => {
