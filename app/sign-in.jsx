@@ -56,9 +56,10 @@ export default function SignInPage() {
       setLoading(false);
       return;
     }
-
+    
+    setEmail(email.trim().toLowerCase());
     const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email,
       password,
     });
 
