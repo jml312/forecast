@@ -1,15 +1,17 @@
 import { View, Text, Platform } from "react-native";
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { useSupabase } from "@/contexts/supabase";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useColorScheme } from "nativewind";
 import { Feather, MaterialCommunityIcons, AntDesign } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
-import { SocialButton, Button, Input } from "@/components/auth";
+import { SocialButton, Button, Input, InfoModal } from "@/components/auth";
 import { useWarmUpBrowser } from "@/hooks";
 import { onSignInWithOauth } from "@/utils/auth";
 import { object, string } from "yup";
+import { isUser } from "@/queries/users";
+import * as Linking from "expo-linking";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -21,8 +23,11 @@ export default function SignInPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [signInError, setSignInError] = useState("");
+  const [modalDetails, setModalDetails] = useState({});
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const appUrl = Linking.useURL();
+  const { emailVerified, email: verifiedEmail } = useLocalSearchParams();
 
   const validationSchema = object({
     password: string()
@@ -52,27 +57,55 @@ export default function SignInPage() {
       return;
     }
 
-    const { session, error } = await supabase.auth.signInWithPassword({
-      email,
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
       password,
     });
 
-    // implement wrong password vs no account found
-
     if (error) {
-      setSignInError(`Incorrect email or password. Please try again.`);
-      // setShowAccountModal(true);
+      if (await isUser(email)) {
+        setSignInError("Invalid password. Please try again.");
+      } else if (error?.message === "Email not confirmed") {
+        setSignInError("Please verify your email before signing in.");
+      } else {
+        setModalDetails({
+          isVisible: true,
+          title: "Account not found",
+          bodyText: "No account was found with that email. Please sign up.",
+          actionText: "Ok",
+        });
+        setSignInError("");
+      }
       setLoading(false);
       return;
     }
 
     router.push("/");
-
     setLoading(false);
   }
 
+  useEffect(() => {
+    if (emailVerified) {
+      setModalDetails({
+        isVisible: true,
+        title: "Email Verified",
+        bodyText: "Your email has been verified. You can now sign in.",
+        actionText: "Ok",
+      });
+      setEmail(verifiedEmail);
+      passwordRef.current.focus();
+    }
+  }, []);
+
   return (
     <View className="mt-7 grow">
+      <InfoModal
+        isVisible={modalDetails.isVisible}
+        title={modalDetails.title}
+        bodyText={modalDetails.bodyText}
+        actionText={modalDetails.actionText}
+        onPress={() => setModalDetails({ ...modalDetails, isVisible: false })}
+      />
       <View>
         <Input
           label="Email"

@@ -36,6 +36,5 @@ export async function onSignInWithOauth({
     });
     router.push("/");
   }
-
   setLoading(false);
 }

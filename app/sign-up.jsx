@@ -9,7 +9,8 @@ import { SocialButton, Button, Input, InfoModal } from "@/components/auth";
 import { object, string } from "yup";
 import { useWarmUpBrowser } from "@/hooks";
 import { onSignInWithOauth } from "@/utils/auth";
-import Constants from "expo-constants";
+import * as Linking from "expo-linking";
+import { isUser } from "@/queries/users";
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function SignUpPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [signUpError, setSignUpError] = useState("");
-  const [showInfoModal, setShowAInfoModal] = useState(false);
+  const [modalDetails, setModalDetails] = useState({});
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
   const nameRef = useRef(null);
@@ -63,46 +64,58 @@ export default function SignUpPage() {
       return;
     }
 
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // emailRedirectTo: `${Constants.expoConfig.scheme}://sign-in/`,
-          data: {
-            name,
-          },
+    setEmail(email.trim().toLowerCase());
+    const redirectURL = Linking.createURL(
+      `sign-in?emailVerified=true&email=${email}`
+    );
+    const { error } = await supabase.auth.signUp({
+      email: email,
+      password,
+      options: {
+        emailRedirectTo: redirectURL,
+        data: {
+          first_name: name.split(" ").slice(0, -1).join(" "),
+          last_name: name.split(" ").slice(-1).join(" "),
         },
-      });
+      },
+    });
 
-      console.log("GOOD", { data, error });
-
-      if (error) {
-        setSignUpError("Error signing up. Please try again.");
+    if (error) {
+      if (await isUser(email)) {
+        setSignUpError(
+          "An account with this email already exists. Please sign in."
+        );
       } else {
-        setShowAInfoModal(true);
+        setSignUpError("Too many requests. Please try again later.");
       }
-    } catch (error) {
-      console.log("ERROR", error);
-
-      setSignUpError(`An account with "${email}" already exists.`);
+      setLoading(false);
+      return;
     }
+
+    setModalDetails({
+      isVisible: true,
+      title: "Email Sent",
+      bodyText:
+        "An email has been sent to your inbox. Please verify your email to continue.",
+      actionText: "Ok",
+    });
     setLoading(false);
   }
 
   return (
     <>
       <InfoModal
-        isVisible={showInfoModal}
-        title="Email Sent"
-        bodyText={`An email has been sent to ${email}. Please check your inbox to verify your email address.`}
-        actionText="Dismiss"
-        onPress={() => setShowAInfoModal(false)}
+        isVisible={modalDetails.isVisible}
+        title={modalDetails.title}
+        bodyText={modalDetails.bodyText}
+        actionText={modalDetails.actionText}
+        onPress={() => setModalDetails({ ...modalDetails, isVisible: false })}
       />
 
       <View className="mt-7 grow">
         <Input
           label="Name"
+          placeholder={`Enter your name`}
           LeftIcon={Feather}
           leftIconName="user"
           inputMode="text"

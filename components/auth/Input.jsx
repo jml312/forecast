@@ -4,6 +4,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 export default function Input({
   label,
+  placeholder,
   LeftIcon,
   leftIconName,
   isPassword,
@@ -19,6 +20,8 @@ export default function Input({
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
+  placeholder = placeholder || `Enter your ${label.toLowerCase()}`;
+
   return (
     <>
       <Text className="mb-1 text-black text-md dark:text-white">{label}</Text>
@@ -33,7 +36,7 @@ export default function Input({
           }
         />
         <TextInput
-          placeholder={`Enter your ${label.toLowerCase()}`}
+          placeholder={placeholder}
           value={value}
           onChangeText={(val) => {
             setError("");

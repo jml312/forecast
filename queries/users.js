@@ -4,20 +4,18 @@ export async function getUserByEmail(email) {
   const { data } = await supabase
     .from("users")
     .select("id, email, name, created_at")
-    .eq("email", email)
+    .eq("email", email.toLowerCase())
     .single();
 
   return data;
 }
 
-export async function createUser({ email, name }) {
-  const { data } = await supabase
+export async function isUser(email) {
+  const { data: isVerified } = await supabase
     .from("users")
-    .insert({
-      email,
-      name,
-    })
-    .select("id, email, name, created_at");
+    .select("is_verified")
+    .eq("email", email.toLowerCase())
+    .single();
 
-  return data;
+  return !!isVerified;
 }

@@ -7,7 +7,7 @@ import { useColorScheme } from "nativewind";
 
 export default function AuthLayout({ children }) {
   const pathname = usePathname();
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
 
   let pageHeader,
     pageDescription,
@@ -30,6 +30,11 @@ export default function AuthLayout({ children }) {
       pageHeader = "Forgot your password";
       pageDescription = "Enter your email to reset your password.";
       break;
+    case "/update-password":
+      pageHeader = "Update your password";
+      pageDescription = "Enter your new password.";
+      linkDescription = "Remember your password?";
+      break;
   }
 
   return (
@@ -41,10 +46,7 @@ export default function AuthLayout({ children }) {
         justifyContent: "space-between",
         width: "100%",
         height: "100%",
-        backgroundColor:
-          colorScheme === "dark"
-            ? theme.extend.colors.dark.bg
-            : theme.extend.colors.light.bg,
+        backgroundColor: theme.extend.colors[colorScheme].bg,
       }}
     >
       <StatusBar style="auto" />

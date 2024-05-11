@@ -1,4 +1,4 @@
-const theme = require("./theme");
+const { theme } = require("./theme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
