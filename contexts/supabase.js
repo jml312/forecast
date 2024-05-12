@@ -42,9 +42,13 @@ export const SupabaseProvider = ({ children }) => {
     });
 
     supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log(event, session);
       if (event === "SIGNED_IN") {
         setSupabaseUser(session.access_token);
         setIsAuthenticated(true);
+      } else if (event === "PASSWORD_RECOVERY") {
+        console.log("RECovery", session);
+        // setSupabaseUser(session.access_token);
       }
     });
   }, []);

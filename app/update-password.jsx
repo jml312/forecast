@@ -1,16 +1,18 @@
 import { View, Text } from "react-native";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Input, Button, InfoModal } from "@/components/auth";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useColorScheme } from "nativewind";
 import { object, string, ref } from "yup";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { isVerifiedUser } from "@/queries/users";
+import { useSupabase } from "@/contexts/supabase";
+import { getUserByEmail } from "@/queries/users";
 
 export default function UpdatePassword() {
   const router = useRouter();
   const { email } = useLocalSearchParams();
+  const [userId, setUserId] = useState(null);
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -21,6 +23,7 @@ export default function UpdatePassword() {
   const passwordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
   const { colorScheme } = useColorScheme();
+  const { isAuthenticated } = useSupabase();
 
   const validationSchema = object({
     confirmPassword: string()
@@ -55,25 +58,7 @@ export default function UpdatePassword() {
       return;
     }
 
-    // const hasAccount = await isVerifiedUser(email);
-    // if (!hasAccount) {
-    //   setModalDetails({
-    //     isVisible: true,
-    //     title: "No User Found",
-    //     bodyText: "No user was found with your email.",
-    //     actionText: "Ok",
-    //   });
-    //   setLoading(false);
-    //   return;
-    // }
-
-    // set session
-    supabase.auth.getSession().then(({ data }) => {
-      console.log("data", data);
-    });
-    return;
-
-    const { error } = await supabase.auth.updateUser({
+    const { error } = await supabase.auth.admin.updateUserById(userId, {
       password,
     });
 
@@ -93,6 +78,20 @@ export default function UpdatePassword() {
     });
     setLoading(false);
   };
+
+  useEffect(() => {
+    (async () => {
+      if (email) {
+        const data = await getUserByEmail(email);
+
+        if (!data?.id) {
+          router.push("/sign-in");
+        }
+
+        setUserId(data.id);
+      }
+    })();
+  }, []);
 
   return (
     <View className="mt-7 grow">
