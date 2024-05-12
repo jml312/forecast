@@ -5,8 +5,10 @@ export function extractParamsFromUrl(url) {
   const params = new URLSearchParams(url.split("#")[1]);
   const data = {
     access_token: params.get("access_token"),
+    expires_in: parseInt(params.get("expires_in") || "0"),
     refresh_token: params.get("refresh_token"),
-    token_hash: params.get("token_hash"),
+    token_type: params.get("token_type"),
+    provider_token: params.get("provider_token"),
   };
   return data;
 }
@@ -15,7 +17,7 @@ export async function onSignInWithOauth({
   provider,
   getOAuthUrl,
   setLoading,
-  setSession,
+  setOAuthSession,
   router,
 }) {
   setLoading(true);
@@ -27,12 +29,13 @@ export async function onSignInWithOauth({
   });
 
   if (result.type === "success") {
-    const { access_token, refresh_token } = result.url;
-    setSession({
-      access_token,
-      refresh_token,
+    const data = extractParamsFromUrl(result.url);
+    setOAuthSession({
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
     });
     router.push("/");
   }
+
   setLoading(false);
 }

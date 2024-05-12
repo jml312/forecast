@@ -9,3 +9,13 @@ export async function getUserByEmail(email) {
 
   return data;
 }
+
+export async function isVerifiedUser(email) {
+  const { data: isVerified } = await supabase
+    .from("users")
+    .select("is_verified")
+    .eq("email", email.toLowerCase())
+    .single();
+
+  return !!isVerified;
+}
