@@ -10,7 +10,7 @@ export const SupabaseContext = createContext({
   isAuthenticated: false,
   user: null,
   getOAuthUrl: async () => "",
-  setOAuthSession: async () => {},
+  setSession: async () => {},
   signOut: async () => {},
 });
 
@@ -42,6 +42,7 @@ export const SupabaseProvider = ({ children }) => {
     });
 
     supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("event", event, session);
       if (event === "SIGNED_IN") {
         setSupabaseUser(session.access_token);
         setIsAuthenticated(true);
@@ -60,7 +61,7 @@ export const SupabaseProvider = ({ children }) => {
     return result.data.url;
   }
 
-  async function setOAuthSession(tokens) {
+  async function setSession(tokens) {
     await supabase.auth.setSession({
       access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
@@ -79,7 +80,7 @@ export const SupabaseProvider = ({ children }) => {
         isAuthenticated,
         user,
         getOAuthUrl,
-        setOAuthSession,
+        setSession,
         signOut,
       }}
     >

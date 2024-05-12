@@ -17,6 +17,7 @@ export default function Input({
   setError,
   setPageError,
   disabled,
+  autoFocus,
 }) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -48,6 +49,8 @@ export default function Input({
           secureTextEntry={isPassword && !showPassword}
           inputMode={isPassword ? "password" : inputMode}
           ref={inputRef}
+          autoCapitalize={label === "Name" && "words"}
+          autoFocus={autoFocus}
         />
         {isPassword && (
           <Pressable

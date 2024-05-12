@@ -9,14 +9,16 @@ export default function SocialButton({
   text,
   colorScheme,
   marginTop = "mt-4",
+  marginBottom ,
 }) {
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       className={clsx(
-        "flex-row items-center justify-center w-full py-4 border-2 rounded-md border-dark-bg dark:border-light-bg",
-        marginTop
+        "flex-row items-center justify-center w-full py-4 border-2 rounded-md border-dark-bg dark:border-light-bg mb-2",
+        marginTop,
+        marginBottom
       )}
     >
       <View className="flex-row items-center justify-center gap-2">
