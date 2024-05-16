@@ -8,9 +8,13 @@ import { supabase } from "@/lib/supabase";
 
 export const SupabaseContext = createContext({
   isAuthenticated: false,
+  isAuthLoading: false,
   user: null,
-  getOAuthUrl: async () => "",
-  setSession: async () => {},
+  getOAuthUrl: async (provider) => "",
+  setSession: async (tokens) => {},
+  setIsAuthLoading: () => {},
+  setIsAuthenticated: () => {},
+  setSupabaseUser: async (accessToken) => {},
   signOut: async () => {},
 });
 
@@ -20,10 +24,11 @@ export function useSupabase() {
 
 export const SupabaseProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [user, setUser] = useState(null);
 
-  async function setSupabaseUser(token) {
-    const decodedToken = jwtDecode(token);
+  async function setSupabaseUser(accessToken) {
+    const decodedToken = jwtDecode(accessToken);
     const { email } = decodedToken.user_metadata;
 
     const data = await getUserByEmail(email);
@@ -33,38 +38,21 @@ export const SupabaseProvider = ({ children }) => {
     }
   }
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setSupabaseUser(data.session.access_token);
-        setIsAuthenticated(true);
-      }
-    });
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("event", event, session);
-      if (event === "SIGNED_IN") {
-        setSupabaseUser(session.access_token);
-        setIsAuthenticated(true);
-      }
-    });
-  }, []);
-
   async function getOAuthUrl(provider) {
     const result = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${Constants.expoConfig.scheme}://home/`,
+        redirectTo: `${Constants.expoConfig.scheme}://`,
       },
     });
 
     return result.data.url;
   }
 
-  async function setSession(tokens) {
+  async function setSession({ access_token, refresh_token }) {
     await supabase.auth.setSession({
-      access_token: tokens.access_token,
-      refresh_token: tokens.refresh_token,
+      access_token,
+      refresh_token,
     });
   }
 
@@ -78,9 +66,13 @@ export const SupabaseProvider = ({ children }) => {
     <SupabaseContext.Provider
       value={{
         isAuthenticated,
+        isAuthLoading,
+        setIsAuthLoading,
         user,
         getOAuthUrl,
         setSession,
+        setIsAuthenticated,
+        setSupabaseUser,
         signOut,
       }}
     >

@@ -6,7 +6,6 @@ export function extractParamsFromUrl(url) {
   const data = {
     access_token: params.get("access_token"),
     refresh_token: params.get("refresh_token"),
-    token_hash: params.get("token_hash"),
   };
   return data;
 }
@@ -15,10 +14,14 @@ export async function onSignInWithOauth({
   provider,
   getOAuthUrl,
   setLoading,
+  setIsAuthLoading,
+  setIsAuthenticated,
+  setSupabaseUser,
   setSession,
   router,
 }) {
   setLoading(true);
+  setIsAuthLoading(true);
 
   const url = await getOAuthUrl(provider);
   const redirectUrl = `${Constants.expoConfig.scheme}:///`;
@@ -27,12 +30,15 @@ export async function onSignInWithOauth({
   });
 
   if (result.type === "success") {
-    const { access_token, refresh_token } = result.url;
-    setSession({
+    const { access_token, refresh_token } = extractParamsFromUrl(result.url);
+    await setSession({
       access_token,
       refresh_token,
     });
+    setIsAuthenticated(true);
+    setSupabaseUser(access_token);
     router.push("/");
   }
   setLoading(false);
+  setIsAuthLoading(false);
 }

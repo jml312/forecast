@@ -7,17 +7,15 @@ import { useRouter } from "expo-router";
 export default function ProtectedLayout() {
   const isAuthPage = useIsAuthPage();
   const router = useRouter();
-  const { isAuthenticated } = useSupabase();
+  const { isAuthenticated, isAuthLoading } = useSupabase();
 
   useEffect(() => {
-    if (isAuthenticated && isAuthPage) {
-      router.push("/");
+    if (!isAuthLoading && isAuthenticated && isAuthPage) {
+      router.replace("/");
     }
-  }, [isAuthenticated, isAuthPage]);
+  }, [isAuthenticated, isAuthPage, isAuthLoading]);
 
-  if (!isAuthenticated) {
-    return <Redirect href="/sign-in" />;
-  }
+  if (!isAuthenticated) return <Redirect href="/sign-in" />;
 
   return (
     <Stack>
