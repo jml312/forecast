@@ -13,10 +13,8 @@ import {
   SatisfactionRangesModal,
 } from "@/components/class";
 import { useState } from "react";
-import { useInputField, useDateRange } from "@/hooks";
-import { add, format } from "date-fns";
-import { isValidInput, formatSatisfactionRange } from "@/utils";
-import { satisfactionRanges } from "@/constants/satisfactionRanges";
+import { useInputField } from "@/hooks";
+import { formatSatisfactionRange } from "@/utils";
 
 export default function AddClassPage() {
   const [loading, setLoading] = useState(false);
@@ -35,7 +33,20 @@ export default function AddClassPage() {
     setError: setSemesterError,
     ref: semesterRef,
   } = useInputField();
-  const { startDate, setStartDate, endDate, setEndDate } = useDateRange();
+  const {
+    value: startDate,
+    setValue: setStartDate,
+    error: startDateError,
+    setError: setStartDateError,
+    ref: startDateRef,
+  } = useInputField(new Date());
+  const {
+    value: endDate,
+    setValue: setEndDate,
+    error: endDateError,
+    setError: setEndDateError,
+    ref: endDateRef,
+  } = useInputField(new Date());
   const {
     value: grade,
     setValue: setGrade,
@@ -44,30 +55,24 @@ export default function AddClassPage() {
     ref: gradeRef,
   } = useInputField();
   const { value: accentColor, setValue: setAccentColor } = useInputField();
-  const [sunnyValue, setSunnyValue] = useState(satisfactionRanges.sunny);
-  const [partlySunnyValue, setPartlySunnyValue] = useState(
-    satisfactionRanges.partlySunny
-  );
-  const [cloudyValue, setCloudyValue] = useState(satisfactionRanges.cloudy);
-  const [rainyValue, setRainyValue] = useState(satisfactionRanges.rainy);
+  const [sunnyValue, setSunnyValue] = useState({
+    min: 90,
+    max: 100,
+  });
+  const [partlySunnyValue, setPartlySunnyValue] = useState({
+    min: 80,
+    max: 90,
+  });
+  const [cloudyValue, setCloudyValue] = useState({
+    min: 70,
+    max: 80,
+  });
+  const [rainyValue, setRainyValue] = useState({
+    min: 0,
+    max: 70,
+  });
   const [isSelectVisible, setIsSelectVisible] = useState(false);
   const [isSatisfactionVisible, setIsSatisfactionVisible] = useState(false);
-
-  const resetSatisfactionRanges = () => {
-    setSunnyValue(satisfactionRanges.sunny);
-    setPartlySunnyValue(satisfactionRanges.partlySunny);
-    setCloudyValue(satisfactionRanges.cloudy);
-    setRainyValue(satisfactionRanges.rainy);
-  };
-
-  const handleSubmit = () => {
-    data = {
-      title,
-      grade,
-    };
-
-    console.log(data);
-  };
 
   return (
     <View className="flex items-center w-full h-full bg-light-bg dark:bg-dark-bg">
@@ -81,13 +86,12 @@ export default function AddClassPage() {
           placeholder="Enter your class title"
           error={titleError}
           value={title}
-          setValue={setTitle}
+          setValue={(value) => setTitle(value.trim().toLowerCase())}
           setError={setTitleError}
           disabled={loading}
           inputRef={titleRef}
           inputMode={"text"}
           required
-          maxLength={50}
         />
         <>
           <ButtonInput
@@ -156,27 +160,28 @@ export default function AddClassPage() {
             setRainyValue={setRainyValue}
             isSatisfactionVisible={isSatisfactionVisible}
             setIsSatisfactionVisible={setIsSatisfactionVisible}
-            loading={loading}
-            resetSatisfactionRanges={resetSatisfactionRanges}
           />
         </>
         <NumberInput
+          // error={titleError}
+          // value={title}
+          // setValue={(value) => setTitle(value.trim().toLowerCase())}
+          // setError={setTitleError}
+          // disabled={loading}
+          // inputRef={titleRef}
+          // inputMode={"numeric"}
           label="Grade"
-          placeholder="Enter your numeric grade"
+          placeholder="Enter your grade"
+          // placeholder={`Min (${minValue} - ${maxValue})`}
+          // width="45%"
           value={grade}
           setValue={setGrade}
           disabled={loading}
           minValue={0}
-          maxValue={100}
         />
         <ColorPicker value={accentColor} setValue={setAccentColor} />
 
-        <Button
-          text="Add Class"
-          disabled={loading}
-          marginTop="mt-3"
-          onPress={handleSubmit}
-        />
+        <Button text="Add Class" disabled={loading} marginTop="mt-0" />
       </View>
     </View>
   );

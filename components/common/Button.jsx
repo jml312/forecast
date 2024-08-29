@@ -5,7 +5,7 @@ export default function Button({
   onPress,
   disabled,
   text,
-  marginTop = "mt-6",
+  marginTop = "mt-8",
   invertColor = false,
 }) {
   return (

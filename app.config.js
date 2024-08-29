@@ -13,7 +13,9 @@ export default ({ config }) => ({
   //   backgroundColor: "",
   // },
   // assetBundlePatterns: ["**/*"],
-  // ios: {},
+  ios: {
+    bundleIdentifier: "com.jlev111.forecast",
+  },
   // android: {},
   plugins: ["expo-router"],
 });

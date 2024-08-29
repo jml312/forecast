@@ -1,6 +1,7 @@
 import { View, Text, TextInput, Pressable } from "react-native";
 import { useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useTheme } from "@/contexts";
 
 export default function Input({
   label,
@@ -10,7 +11,6 @@ export default function Input({
   isPassword,
   inputMode,
   inputRef,
-  colorScheme,
   value,
   setValue,
   error,
@@ -19,6 +19,7 @@ export default function Input({
   disabled,
   autoFocus,
 }) {
+  const { theme, getThemeColor } = useTheme();
   const [showPassword, setShowPassword] = useState(false);
 
   placeholder = placeholder || `Enter your ${label.toLowerCase()}`;
@@ -26,15 +27,14 @@ export default function Input({
   return (
     <>
       <Text className="mb-1 text-black text-md dark:text-white">{label}</Text>
-      <View className="flex flex-row items-center justify-center p-2 border-2 border-gray-200 rounded-md bg-light-input dark:bg-dark-input dark:border-gray-700">
+      <View className="flex flex-row items-center justify-center p-2 border-2 border-gray-400 rounded-md bg-white dark:bg-black dark:border-gray-700">
         <LeftIcon
           name={leftIconName}
           size={20}
-          color={
-            colorScheme === "dark"
-              ? "rgba(156, 163, 175, 1)"
-              : "rgba(107, 114, 128 1)"
-          }
+          color={getThemeColor(
+            theme.extend.colors.light.muted,
+            theme.extend.colors.dark.muted
+          )}
         />
         <TextInput
           placeholder={placeholder}
@@ -60,11 +60,10 @@ export default function Input({
             <MaterialCommunityIcons
               name={showPassword ? "eye-outline" : "eye-off-outline"}
               size={20}
-              color={
-                colorScheme === "dark"
-                  ? "rgba(156, 163, 175, 1)"
-                  : "rgba(107, 114, 128 1)"
-              }
+              color={getThemeColor(
+                theme.extend.colors.light.muted,
+                theme.extend.colors.dark.muted
+              )}
             />
           </Pressable>
         )}

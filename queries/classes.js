@@ -1,12 +1,7 @@
 import { supabase } from "@/lib/supabase";
 
 export async function getClasses() {
-  // const { dxata } = await supabase
-  //   .from("users")
-  //   .select("id, email, name, created_at")
-  //   .eq("email", email)
-  //   .single();
+  const { data } = await supabase.from("classes").select("*");
 
-
-  // return data;
+  return data;
 }

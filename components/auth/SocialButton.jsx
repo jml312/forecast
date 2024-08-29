@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { clsx } from "clsx";
+import { useTheme } from "@/contexts";
 
 export default function SocialButton({
   onPress,
@@ -7,16 +8,16 @@ export default function SocialButton({
   Icon,
   iconName,
   text,
-  colorScheme,
   marginTop = "mt-4",
-  marginBottom ,
+  marginBottom,
 }) {
+  const { theme, getThemeColor } = useTheme();
   return (
     <Pressable
       onPress={onPress}
       disabled={disabled}
       className={clsx(
-        "flex-row items-center justify-center w-full py-4 border-2 rounded-md border-dark-bg dark:border-light-bg mb-2",
+        "flex-row items-center justify-center w-full py-4 border-2 rounded-md border-dark dark:border-light mb-2",
         marginTop,
         marginBottom
       )}
@@ -25,7 +26,7 @@ export default function SocialButton({
         <Icon
           name={iconName}
           size={24}
-          color={colorScheme === "dark" ? "white" : "black"}
+          color={getThemeColor("black", "white")}
         />
         <Text className="font-semibold text-black dark:text-white text-md">
           {text}

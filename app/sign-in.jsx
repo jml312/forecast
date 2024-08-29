@@ -1,23 +1,22 @@
-import { View, Text, Platform } from "react-native";
-import { useSupabase } from "@/contexts/supabase";
-import { useState, useRef, useEffect } from "react";
+import { View, Text, Pressable } from "react-native";
+import { useSupabase, useTheme } from "@/contexts";
+import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
-import { useColorScheme } from "nativewind";
 import { Feather, AntDesign } from "@expo/vector-icons";
 import { supabase } from "@/lib/supabase";
-import { SocialButton, Button, Input, InfoModal } from "@/components/auth";
-import { useWarmUpBrowser } from "@/hooks";
-import { onSignInWithOauth, extractParamsFromUrl } from "@/utils/auth";
+import { SocialButton, Input } from "@/components/auth";
+import { Button, BaseModal, Loader } from "@/components/common";
+import { useWarmUpBrowser, useInputField } from "@/hooks";
+import { onSignInWithOauth, extractParamsFromUrl, isValidInput } from "@/utils";
 import { object, string } from "yup";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { theme } from "@/theme";
 import { StatusBar } from "expo-status-bar";
 import * as Linking from "expo-linking";
 import { openInbox } from "react-native-email-link";
 
 export default function SignInPage() {
+  const { theme, getThemeColor } = useTheme();
   const router = useRouter();
-  const { colorScheme } = useColorScheme();
   const {
     getOAuthUrl,
     setSession,
@@ -28,11 +27,15 @@ export default function SignInPage() {
     setIsAuthLoading,
   } = useSupabase();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [signInError, setSignInError] = useState("");
   const [modalDetails, setModalDetails] = useState({});
-  const emailRef = useRef(null);
+  const {
+    value: email,
+    setValue: setEmail,
+    error: emailError,
+    setError: setEmailError,
+    ref: emailRef,
+  } = useInputField();
   const oAuthSignInParams = {
     getOAuthUrl,
     setLoading,
@@ -55,13 +58,15 @@ export default function SignInPage() {
     setSignInError("");
     setLoading(true);
 
-    try {
-      await validationSchema.validate({ email }, { strict: true });
-    } catch ({ path, message }) {
-      if (path === "email") {
-        setEmailError(message);
-        emailRef.current.focus();
-      }
+    const fields = [
+      {
+        name: "email",
+        value: email,
+        setError: setEmailError,
+        ref: emailRef,
+      },
+    ];
+    if (!(await isValidInput({ validationSchema, fields }))) {
       setLoading(false);
       return;
     }
@@ -83,7 +88,7 @@ export default function SignInPage() {
     setModalDetails({
       isVisible: true,
       title: "Magic Link Sent",
-      bodyText: "Check your email for the magic link to sign in.",
+      bodyText: "Check your email to sign in.",
       actionText: "Ok",
     });
     setLoading(false);
@@ -107,7 +112,7 @@ export default function SignInPage() {
   }, [isAuthenticated]);
 
   if (isAuthLoading) {
-    return <Text>Loading...</Text>;
+    return <Loader />;
   }
 
   return (
@@ -119,7 +124,10 @@ export default function SignInPage() {
         justifyContent: "space-between",
         width: "100%",
         height: "100%",
-        backgroundColor: theme.extend.colors[colorScheme].bg,
+        backgroundColor: getThemeColor(
+          theme.extend.colors.light.bg,
+          theme.extend.colors.dark.bg
+        ),
       }}
     >
       <StatusBar style="auto" />
@@ -139,7 +147,8 @@ export default function SignInPage() {
         </View>
 
         <View className="mt-7 grow">
-          <InfoModal
+          <BaseModal
+            isInfo
             isVisible={modalDetails.isVisible}
             title={modalDetails.title}
             bodyText={modalDetails.bodyText}
@@ -158,7 +167,6 @@ export default function SignInPage() {
               leftIconName="mail"
               inputMode="email"
               inputRef={emailRef}
-              colorScheme={colorScheme}
               value={email}
               setValue={(value) => setEmail(value.trim().toLowerCase())}
               error={emailError}
@@ -199,11 +207,9 @@ export default function SignInPage() {
             Icon={AntDesign}
             iconName="google"
             text="Sign in with Google"
-            colorScheme={colorScheme}
             marginTop="-mt-2.5"
           />
 
-          {/* {Platform.OS === "ios" && ( */}
           <SocialButton
             onPress={() =>
               onSignInWithOauth({
@@ -215,9 +221,16 @@ export default function SignInPage() {
             Icon={AntDesign}
             iconName="apple1"
             text="Sign in with Apple"
-            colorScheme={colorScheme}
           />
-          {/* )} */}
+          <Pressable
+            onPress={() => router.push("/add-class")}
+            disabled={loading}
+            className="flex items-center justify-center mt-4"
+          >
+            <Text className="text-gray-500 text-md dark:text-gray-400">
+              Add Class
+            </Text>
+          </Pressable>
         </View>
       </View>
     </SafeAreaView>

@@ -1,5 +1,5 @@
 import { Redirect, Stack } from "expo-router";
-import { useSupabase } from "@/contexts/supabase";
+import { useSupabase } from "@/contexts";
 import { useIsAuthPage } from "@/hooks";
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
@@ -9,13 +9,15 @@ export default function ProtectedLayout() {
   const router = useRouter();
   const { isAuthenticated, isAuthLoading } = useSupabase();
 
-  useEffect(() => {
-    if (!isAuthLoading && isAuthenticated && isAuthPage) {
-      router.replace("/");
-    }
-  }, [isAuthenticated, isAuthPage, isAuthLoading]);
+  // useEffect(() => {
+  //   if (!isAuthLoading && isAuthenticated && isAuthPage) {
+  //     router.replace("/");
+  //   }
+  // }, [isAuthenticated, isAuthPage, isAuthLoading]);
 
-  if (!isAuthenticated) return <Redirect href="/sign-in" />;
+  // if (!isAuthenticated) {
+  //   return <Redirect href="/sign-in" />;
+  // }
 
   return (
     <Stack>
@@ -25,11 +27,12 @@ export default function ProtectedLayout() {
           headerShown: false,
         }}
       />
+
       <Stack.Screen
         name="add-class"
         options={{
           presentation: "modal",
-          // headerShown: false,
+          headerShown: false,
         }}
       />
     </Stack>
