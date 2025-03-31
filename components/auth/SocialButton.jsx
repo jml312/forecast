@@ -11,7 +11,7 @@ export default function SocialButton({
   marginTop = "mt-4",
   marginBottom,
 }) {
-  const { theme, getThemeColor } = useTheme();
+  const { getThemeColor } = useTheme();
   return (
     <Pressable
       onPress={onPress}

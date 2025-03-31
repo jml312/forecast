@@ -12,6 +12,7 @@ export default function BaseModal({
   isInfo,
   buttonMarginTop = "mt-5",
   RightIcon,
+  bottomError,
 }) {
   return (
     <Modal
@@ -22,14 +23,14 @@ export default function BaseModal({
       backdropTransitionOutTiming={0}
     >
       <View className="flex items-center justify-center p-4 border border-gray-400 rounded-md dark:bg-dark-bg bg-light-bg dark:border-gray-500">
-        <View className="flex flex-row items-center justify-between w-full">
-          <View />
-
+        <View className="flex flex-row items-center justify-center w-full">
           <Text className="mb-2 text-2xl font-semibold text-black dark:text-white">
             {title}
           </Text>
 
-          {RightIcon ? RightIcon : <View />}
+          <View className="absolute top-0 right-0">
+            {RightIcon && RightIcon}
+          </View>
         </View>
         {isInfo ? (
           <>
@@ -41,6 +42,11 @@ export default function BaseModal({
           </>
         ) : (
           children
+        )}
+        {bottomError && (
+          <Text className="self-start mt-4 -mb-1 text-base text-red-500">
+            {bottomError}
+          </Text>
         )}
         <Button
           text={actionText}

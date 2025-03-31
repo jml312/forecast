@@ -9,6 +9,8 @@ export default function ButtonInput({
   onPress,
   width = "100%",
   disabled,
+  error,
+  setError,
 }) {
   return (
     <View
@@ -30,7 +32,10 @@ export default function ButtonInput({
         )}
       >
         <Pressable
-          onPress={onPress}
+          onPress={() => {
+            setError && setError("");
+            onPress();
+          }}
           className="py-[5px] ml-2 mr-1 text-gray-500 grow dark:text-gray-400"
         >
           <Text className="text-gray-500 dark:text-gray-400">
@@ -38,6 +43,11 @@ export default function ButtonInput({
           </Text>
         </Pressable>
       </View>
+      {error && (
+        <Text className="mt-1 text-red-500 text-md dark:text-red-400">
+          {error}
+        </Text>
+      )}
     </View>
   );
 }

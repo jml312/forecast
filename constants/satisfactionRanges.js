@@ -1,67 +1,27 @@
 const satisfactionRanges = {
   sunny: {
-    lower: {
-      min: 3,
-      max: 100,
-      value: 90,
-      selectValue: 90,
-      isDisabled: false,
-    },
-    higher: {
-      min: 100,
-      max: 100,
-      value: 100,
-      selectValue: 100,
-      isDisabled: true,
-    },
+    low: 90,
+    high: 100,
+    min: 3,
+    max: 100,
   },
   partlySunny: {
-    lower: {
-      min: 2,
-      max: 89,
-      value: 80,
-      selectValue: 80,
-      isDisabled: false,
-    },
-    higher: {
-      min: 3,
-      max: 90,
-      value: 90,
-      selectValue: 90,
-      isDisabled: false,
-    },
+    low: 80,
+    high: 90,
+    min: 2,
+    max: 99,
   },
   cloudy: {
-    lower: {
-      min: 1,
-      max: 79,
-      value: 70,
-      selectValue: 70,
-      isDisabled: false,
-    },
-    higher: {
-      min: 2,
-      max: 80,
-      value: 80,
-      selectValue: 80,
-      isDisabled: false,
-    },
+    low: 70,
+    high: 80,
+    min: 1,
+    max: 98,
   },
   rainy: {
-    lower: {
-      min: 0,
-      max: 0,
-      value: 0,
-      selectValue: 0,
-      isDisabled: true,
-    },
-    higher: {
-      min: 1,
-      max: 70,
-      value: 70,
-      selectValue: 70,
-      isDisabled: false,
-    },
+    low: 0,
+    high: 70,
+    min: 0,
+    max: 97,
   },
 };
 

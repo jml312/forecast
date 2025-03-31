@@ -5,7 +5,7 @@ import {
   InputDatePicker,
   PageModalHeader,
   ButtonInput,
-  NumberInput,
+  GradeSelect,
 } from "@/components/common";
 import {
   SemesterModal,
@@ -14,8 +14,8 @@ import {
 } from "@/components/class";
 import { useState } from "react";
 import { useInputField, useDateRange } from "@/hooks";
-import { add, format } from "date-fns";
-import { isValidInput, formatSatisfactionRange } from "@/utils";
+import { format } from "date-fns";
+import { formatSatisfactionRange } from "@/utils";
 import { satisfactionRanges } from "@/constants/satisfactionRanges";
 
 export default function AddClassPage() {
@@ -33,16 +33,14 @@ export default function AddClassPage() {
     setValue: setSemester,
     error: semesterError,
     setError: setSemesterError,
-    ref: semesterRef,
-  } = useInputField();
-  const { startDate, setStartDate, endDate, setEndDate } = useDateRange();
-  const {
-    value: grade,
-    setValue: setGrade,
-    error: gradeError,
-    setError: setGradeError,
-    ref: gradeRef,
-  } = useInputField();
+  } = useInputField({
+    season: "",
+    startDate: null,
+    endDate: null,
+  });
+  const [semesterOptions, setSemesterOptions] = useState([]);
+  const { startDate, setStartDate, endDate, setEndDate } = useDateRange(false);
+  const { value: grade, setValue: setGrade } = useInputField();
   const { value: accentColor, setValue: setAccentColor } = useInputField();
   const [sunnyValue, setSunnyValue] = useState(satisfactionRanges.sunny);
   const [partlySunnyValue, setPartlySunnyValue] = useState(
@@ -60,13 +58,38 @@ export default function AddClassPage() {
     setRainyValue(satisfactionRanges.rainy);
   };
 
-  const handleSubmit = () => {
-    data = {
-      title,
-      grade,
-    };
+  const handleSubmit = async () => {
+    // const data = {
+    //   title,
+    //   semester,
+    //   startDate,
+    //   endDate,
+    //   ranges: {
+    //     sunny: sunnyValue,
+    //     partlySunny: partlySunnyValue,
+    //     cloudy: cloudyValue,
+    //     rainy: rainyValue,
+    //   },
+    //   grade,
+    //   accentColor,
+    // };
 
-    console.log(data);
+    setLoading(true);
+
+    if (!title) {
+      titleRef?.current?.focus();
+      setTitleError("Please enter your class title");
+      setLoading(false);
+      return;
+    }
+
+    if (!semester?.season) {
+      setSemesterError("Please select your class semester");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -92,12 +115,18 @@ export default function AddClassPage() {
         <>
           <ButtonInput
             label={"Semester"}
-            placeholder={"Select your class semester"}
+            placeholder={
+              semester?.season
+                ? `${semester?.season} ${format(semester?.startDate, "yyyy")}`
+                : "Select your class semester"
+            }
             required
             onPress={() => {
               if (loading) return;
               setIsSelectVisible(true);
             }}
+            error={semesterError}
+            setError={setSemesterError}
           />
           <SemesterModal
             disabled={loading}
@@ -105,31 +134,14 @@ export default function AddClassPage() {
             placeholder={"Select your class semester"}
             value={semester}
             setValue={setSemester}
-            items={[]}
+            items={semesterOptions}
+            setItems={setSemesterOptions}
             required
             isSelectVisible={isSelectVisible}
             setIsSelectVisible={setIsSelectVisible}
             loading={loading}
           />
         </>
-        <View className="flex-row items-start justify-between w-full">
-          <InputDatePicker
-            date={startDate}
-            setDate={setStartDate}
-            mode="date"
-            title="Start Date"
-            width="47%"
-            disabled={loading}
-          />
-          <InputDatePicker
-            date={endDate}
-            setDate={setEndDate}
-            mode="date"
-            title="End Date"
-            width="47%"
-            disabled={loading}
-          />
-        </View>
         <>
           <ButtonInput
             label={"Satisfaction Ranges"}
@@ -160,17 +172,8 @@ export default function AddClassPage() {
             resetSatisfactionRanges={resetSatisfactionRanges}
           />
         </>
-        <NumberInput
-          label="Grade"
-          placeholder="Enter your numeric grade"
-          value={grade}
-          setValue={setGrade}
-          disabled={loading}
-          minValue={0}
-          maxValue={100}
-        />
+        <GradeSelect grade={grade} setGrade={setGrade} />
         <ColorPicker value={accentColor} setValue={setAccentColor} />
-
         <Button
           text="Add Class"
           disabled={loading}

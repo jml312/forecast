@@ -15,6 +15,7 @@ export default function SelectModal({
   children,
   missingItemsText,
   onClose,
+  RightIcon,
 }) {
   const { getThemeColor } = useTheme();
 
@@ -38,15 +39,18 @@ export default function SelectModal({
             <Text className="mb-3 ml-4 text-2xl font-semibold text-black dark:text-white">
               {label}
             </Text>
-            <Pressable
-              onPress={() => {
-                onClose && onClose();
-                setIsSelectVisible(false);
-              }}
-              className="mb-3 mr-4"
-            >
-              <Text className="text-black dark:text-white">Done</Text>
-            </Pressable>
+            <View className="flex-row items-start justify-center gap-3">
+              {RightIcon && <View className="mr-2">{RightIcon}</View>}
+              <Pressable
+                onPress={() => {
+                  onClose && onClose();
+                  setIsSelectVisible(false);
+                }}
+                className="mb-3 mr-4"
+              >
+                <Text className="text-black dark:text-white">Done</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 

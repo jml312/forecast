@@ -1,7 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { useTheme } from "@/contexts";
-import { useState } from "react";
-import { EvilIcons } from "@expo/vector-icons";
+import { useState, useMemo, useEffect } from "react";
+import { EvilIcons, AntDesign } from "@expo/vector-icons";
 import {
   SelectModal,
   ButtonInput,
@@ -10,11 +10,26 @@ import {
 } from "@/components/common";
 import { clsx } from "clsx";
 import { useInputField, useDateRange } from "@/hooks";
+import { format, compareAsc } from "date-fns";
+
+const parseSemesterString = (semesterString) => {
+  const [season, startDate, endDate] = semesterString.split("|");
+  return {
+    season,
+    startDate: new Date(startDate),
+    endDate: new Date(endDate),
+  };
+};
+
+const stringifySemester = (semester) => {
+  return `${semester.season}|${semester.startDate}|${semester.endDate}`;
+};
 
 export function SemesterModal({
   value,
   setValue,
   items,
+  setItems,
   required = false,
   placeholder,
   disabled,
@@ -24,20 +39,52 @@ export function SemesterModal({
 }) {
   const { getThemeColor } = useTheme();
   const [isAddSemesterVisible, setIsAddSemesterVisible] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState(
+    !!value?.season ? stringifySemester(value) : null
+  );
+
+  const sortedItems = useMemo(
+    () =>
+      items?.sort(({ value: aValue }, { value: bValue }) => {
+        const a = parseSemesterString(aValue);
+        const b = parseSemesterString(bValue);
+        const aDate = format(new Date(a.startDate), "yyyy-MM-dd");
+        const bDate = format(new Date(b.startDate), "yyyy-MM-dd");
+        const dateComparison = compareAsc(aDate, bDate);
+        if (dateComparison !== 0) return dateComparison;
+        const seasonOrder = { Fall: 1, Winter: 2, Spring: 3, Summer: 4 };
+        return seasonOrder[a.season] - seasonOrder[b.season];
+      }),
+
+    [items]
+  );
+
+  useEffect(() => {
+    if (!!value?.season) {
+      setSelectedSemester(stringifySemester(value));
+    }
+  }, [value]);
+
   return (
     <>
       <AddSemesterModal
         isVisible={isAddSemesterVisible}
         setIsVisible={setIsAddSemesterVisible}
+        setValue={setValue}
+        setItems={setItems}
       />
       <SelectModal
         isSelectVisible={isSelectVisible}
         setIsSelectVisible={setIsSelectVisible}
-        value={value}
-        setValue={setValue}
+        value={selectedSemester}
+        setValue={setSelectedSemester}
         placeholder={placeholder}
         label={label}
-        items={items}
+        onClose={() => {
+          if (!selectedSemester) return;
+          setValue(parseSemesterString(selectedSemester));
+        }}
+        items={sortedItems}
         disabled={disabled}
         required={required}
         missingItemsText={"No semesters found"}
@@ -70,7 +117,12 @@ export function SemesterModal({
   );
 }
 
-export function AddSemesterModal({ isVisible, setIsVisible }) {
+export function AddSemesterModal({
+  isVisible,
+  setIsVisible,
+  setValue,
+  setItems,
+}) {
   const [isSelectVisible, setIsSelectVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const {
@@ -80,14 +132,47 @@ export function AddSemesterModal({ isVisible, setIsVisible }) {
     setError: setSemesterSeasonError,
     ref: semesterSeasonRef,
   } = useInputField();
-  const { startDate, setStartDate, endDate, setEndDate } = useDateRange();
+  const { startDate, setStartDate, endDate, setEndDate, now } = useDateRange();
+  const { getThemeColor } = useTheme();
 
   return (
     <BaseModal
       isVisible={isVisible}
       actionText={"Add Semester"}
       title="Add A Semester"
+      RightIcon={
+        <AntDesign
+          name="close"
+          size={18}
+          onPress={() => {
+            setIsVisible(false);
+            setSemesterSeason("");
+            setStartDate(new Date());
+            setEndDate(new Date());
+            setSemesterSeasonError(false);
+          }}
+          color={getThemeColor("black", "white")}
+        />
+      }
+      bottomError={semesterSeasonError && "Please select a season"}
       onPress={() => {
+        if (!semesterSeason) return setSemesterSeasonError(true);
+        const semester = {
+          season: semesterSeason,
+          startDate,
+          endDate,
+        };
+        setValue(semester);
+        setItems((prev) => [
+          ...prev,
+          {
+            label: `${semesterSeason} ${startDate.getFullYear()}`,
+            value: stringifySemester(semester),
+          },
+        ]);
+        setSemesterSeason("");
+        setStartDate(new Date());
+        setEndDate(new Date());
         setIsVisible(false);
       }}
     >
@@ -100,6 +185,7 @@ export function AddSemesterModal({ isVisible, setIsVisible }) {
           required
           onPress={() => {
             if (loading) return;
+            setSemesterSeasonError(false);
             setIsSelectVisible(true);
           }}
         />
@@ -113,6 +199,11 @@ export function AddSemesterModal({ isVisible, setIsVisible }) {
           placeholder={"Select a season"}
           label={"Season"}
           items={["Fall", "Spring", "Summer", "Winter"]}
+          onClose={() => {
+            if (!semesterSeason) {
+              setSemesterSeason("Fall");
+            }
+          }}
         />
         <View className="flex-row items-start justify-between w-full">
           <InputDatePicker
@@ -123,6 +214,8 @@ export function AddSemesterModal({ isVisible, setIsVisible }) {
             width="47%"
             disabled={loading}
             required
+            withResetButton
+            initialValue={now}
           />
           <InputDatePicker
             date={endDate}
@@ -132,6 +225,8 @@ export function AddSemesterModal({ isVisible, setIsVisible }) {
             width="47%"
             disabled={loading}
             required
+            withResetButton
+            initialValue={now}
           />
         </View>
       </View>

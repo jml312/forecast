@@ -99,7 +99,6 @@ export default function SignInPage() {
       const { access_token, refresh_token } = extractParamsFromUrl(event.url);
       if (isAuthenticated || !access_token || !refresh_token) return;
       setIsAuthLoading(true);
-      console.log("setting session...");
       await setSession({
         access_token,
         refresh_token,

@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { View, Text } from "react-native";
 import { BaseModal, ButtonInput, SelectModal } from "@/components/common";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { satisfactionRanges } from "@/constants/satisfactionRanges";
 
 export default function SatisfactionRangesModal({
   sunnyValue,
@@ -17,25 +17,55 @@ export default function SatisfactionRangesModal({
   loading,
   resetSatisfactionRanges,
 }) {
-  const setValue = ({
-    newVal,
-    currVal,
-    setFn,
-    isLower = true,
-    isValue = true,
-  }) => {
-    const valueKey = isValue ? "value" : "selectValue";
-    setFn({
-      higher: {
-        ...currVal.higher,
-        [valueKey]: isLower ? currVal.higher.value : newVal,
-      },
-      lower: {
-        ...currVal.lower,
-        [valueKey]: isLower ? newVal : currVal.lower.value,
-      },
-    });
-  };
+  const satisfactionRangeData = [
+    {
+      label: "Sunny 🌤️",
+      title: "Sunny",
+      value: sunnyValue,
+      setValue: setSunnyValue,
+      isUpperReadOnly: true,
+    },
+    {
+      label: "Partly Sunny ⛅",
+      title: "Partly Sunny",
+      value: partlySunnyValue,
+      setValue: setPartlySunnyValue,
+    },
+    {
+      label: "Cloudy ☁️",
+      title: "Cloudy",
+      value: cloudyValue,
+      setValue: setCloudyValue,
+    },
+    {
+      label: "Rainy 🌧️",
+      title: "Rainy",
+      value: rainyValue,
+      setValue: setRainyValue,
+      isLowerReadOnly: true,
+    },
+  ];
+  const [isRangeError, setIsRangeError] = useState(false);
+  const gradeRange = useMemo(
+    () =>
+      Array.from({ length: 101 })
+        .map((_, i) => ({
+          label: `${i}`,
+          value: i,
+        }))
+        .reverse(),
+    []
+  );
+  
+  const isSatisfactionRangesChanged =
+    sunnyValue.low !== satisfactionRanges.sunny.low ||
+    sunnyValue.high !== satisfactionRanges.sunny.high ||
+    partlySunnyValue.low !== satisfactionRanges.partlySunny.low ||
+    partlySunnyValue.high !== satisfactionRanges.partlySunny.high ||
+    cloudyValue.low !== satisfactionRanges.cloudy.low ||
+    cloudyValue.high !== satisfactionRanges.cloudy.high ||
+    rainyValue.low !== satisfactionRanges.rainy.low ||
+    rainyValue.high !== satisfactionRanges.rainy.high;
 
   return (
     <BaseModal
@@ -43,110 +73,76 @@ export default function SatisfactionRangesModal({
       actionText={"Done"}
       title="Satisfaction Ranges"
       onPress={() => {
+        const isValidRanges =
+          rainyValue.high === cloudyValue.low &&
+          cloudyValue.high === partlySunnyValue.low &&
+          partlySunnyValue.high === sunnyValue.low;
+        if (!isValidRanges) {
+          setIsRangeError(true);
+          return;
+        }
         setIsSatisfactionVisible(false);
+        setIsRangeError(false);
       }}
       buttonMarginTop="mt-[1.1rem]"
       RightIcon={
-        <MaterialCommunityIcons
-          name="restart"
-          size={24}
-          onPress={resetSatisfactionRanges}
-        />
+        isSatisfactionRangesChanged && (
+          <Text
+            className="text-black dark:text-white"
+            onPress={() => {
+              resetSatisfactionRanges();
+              setIsRangeError(false);
+            }}
+          >
+            Reset
+          </Text>
+        )
+      }
+      bottomError={
+        isRangeError &&
+        "Invalid satisfaction ranges. Adjust the values or press reset to restore defaults."
       }
     >
       <View className="flex items-start justify-center w-full gap-4 mb-2 mt-0.5">
-        {/* Sunny */}
-        <RangeRow label="Sunny 🌤️">
-          <RangeInput
-            isLower
-            withSeparator
-            label="Sunny 🌤️"
+        {satisfactionRangeData.map(({ label, ...data }) => (
+          <RangeRow
+            key={label}
+            {...data}
+            label={label}
+            isSatisfactionRangesChanged={isSatisfactionRangesChanged}
+            gradeRange={gradeRange}
             loading={loading}
-            value={sunnyValue}
-            setValue={setValue}
-            setFn={setSunnyValue}
+            setIsRangeError={setIsRangeError}
           />
-
-          <RangeInput
-            value={sunnyValue}
-            disabled
-            label="Sunny 🌤️"
-            loading={loading}
-          />
-        </RangeRow>
-
-        {/* Partly Sunny */}
-        <RangeRow label="Partly Sunny ⛅">
-          <RangeInput
-            value={partlySunnyValue}
-            setValue={setValue}
-            setFn={setPartlySunnyValue}
-            isLower
-            withSeparator
-            label="Partly Sunny ⛅"
-            loading={loading}
-          />
-
-          <RangeInput
-            value={partlySunnyValue}
-            setValue={setValue}
-            setFn={setPartlySunnyValue}
-            label="Partly Sunny ⛅"
-            loading={loading}
-          />
-        </RangeRow>
-
-        {/* Cloudy */}
-        <RangeRow label="Cloudy ☁️">
-          <RangeInput
-            value={cloudyValue}
-            setValue={setValue}
-            setFn={setCloudyValue}
-            isLower
-            withSeparator
-            label="Cloudy ☁️"
-            loading={loading}
-          />
-
-          <RangeInput
-            value={cloudyValue}
-            setValue={setValue}
-            setFn={setCloudyValue}
-            label="Cloudy ☁️"
-            loading={loading}
-          />
-        </RangeRow>
-
-        {/* Rainy */}
-        <RangeRow label="Rainy 🌧️">
-          <RangeInput
-            value={rainyValue}
-            withSeparator
-            disabled
-            isLower
-            label="Rainy 🌧️"
-            loading={loading}
-          />
-
-          <RangeInput
-            value={rainyValue}
-            setValue={setValue}
-            setFn={setRainyValue}
-            label="Rainy 🌧️"
-            loading={loading}
-          />
-        </RangeRow>
+        ))}
       </View>
     </BaseModal>
   );
 }
 
-function RangeRow({ label, children }) {
+function RangeRow({ label, isLowerReadOnly, isUpperReadOnly, ...rest }) {
   return (
     <View>
       <Text className="mb-1 text-lg text-black dark:text-white">{label}</Text>
       <View className="flex-row items-center justify-between w-full">
-        {children}
+        {/* from */}
+        {isLowerReadOnly ? (
+          <>
+            <ButtonInput width="45%" value={rest.value.low} disabled />
+            <Text className="font-light text-black text-md dark:text-white">
+              to
+            </Text>
+          </>
+        ) : (
+          <RangeInput withSeparator isLower {...rest} />
+        )}
+
+        {/* to */}
+        {isUpperReadOnly ? (
+          <ButtonInput width="45%" value={rest.value.high} disabled />
+        ) : (
+          <RangeInput {...rest} />
+        )}
       </View>
     </View>
   );
@@ -155,70 +151,75 @@ function RangeRow({ label, children }) {
 function RangeInput({
   value,
   setValue,
-  setFn,
   loading,
-  label,
+  title,
+  gradeRange,
   isLower,
   withSeparator,
-  updateOtherRanges,
+  isSatisfactionRangesChanged,
+  setIsRangeError,
 }) {
   const [selectDetails, setSelectDetails] = useState({
     open: false,
     label: "",
   });
+  const [currentValue, setCurrentValue] = useState(
+    isLower ? value?.low : value?.high
+  );
 
-  const generateRange = useCallback((min, max) => {
-    return Array.from({ length: max - min + 1 }, (_, i) => ({
-      label: `${min + i}`,
-      value: min + i,
-    })).reverse();
-  }, []);
+  const onClose = () => {
+    if (isLower) {
+      const highValue = value.high < currentValue ? currentValue : value.high;
+      setValue({
+        high: highValue, // only change if the value is lower
+        low: currentValue,
+      });
+      setCurrentValue(highValue);
+    } else {
+      const lowValue = value.low > currentValue ? currentValue : value.low;
+      setValue({
+        high: currentValue,
+        low: lowValue, // only change if the value is higher
+      });
+      setCurrentValue(lowValue);
+    }
+  };
 
-  const currentValue = isLower ? value.lower : value.higher;
-  const disabled = currentValue?.isDisabled;
+  useEffect(() => {
+    setCurrentValue(isLower ? value?.low : value?.high);
+  }, [value]);
+
+  useEffect(() => {
+    if (!isSatisfactionRangesChanged) {
+      setCurrentValue(isLower ? value?.low : value?.high);
+    }
+  }, [isSatisfactionRangesChanged, value, isLower]);
 
   return (
     <>
       <ButtonInput
         width="45%"
-        disabled={disabled}
-        value={currentValue?.value}
+        value={isLower ? value?.low : value?.high}
         onPress={() => {
-          if (loading || disabled) return;
+          if (loading) return;
           setSelectDetails({
             open: true,
-            label: `${label} ${isLower ? "min" : "max"}`,
+            label: `${title} ${isLower ? "Minimum" : "Maximum"}`,
           });
+          setIsRangeError(false);
         }}
       />
       <SelectModal
         disabled={loading}
-        value={currentValue?.selectValue}
-        setValue={(val) => {
-          setValue({
-            setFn,
-            newVal: val,
-            currVal: value,
-            isValue: false,
-            isLower,
-          });
-        }}
+        value={currentValue}
+        setValue={setCurrentValue}
         isSelectVisible={selectDetails.open}
         setIsSelectVisible={() =>
           setSelectDetails({ ...selectDetails, open: !selectDetails.open })
         }
         label={selectDetails.label}
-        items={generateRange(currentValue?.min, currentValue?.max)}
-        onClose={() => {
-          const val = currentValue?.selectValue;
-          setValue({
-            setFn,
-            newVal: val,
-            currVal: value,
-            isLower,
-          });
-          // updateOtherRanges && updateOtherRanges(val);
-        }}
+        items={gradeRange}
+        onClose={onClose}
       />
       {withSeparator && (
         <Text className="font-light text-black text-md dark:text-white">

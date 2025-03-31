@@ -7,6 +7,7 @@ import ButtonInput from "./ButtonInput";
 import SelectModal from "./SelectModal";
 import BaseModal from "./BaseModal";
 import NumberInput from "./NumberInput";
+import GradeSelect from "./GradeSelect";
 
 export {
   Button,
@@ -18,4 +19,5 @@ export {
   ButtonInput,
   BaseModal,
   NumberInput,
+  GradeSelect,
 };

@@ -3,7 +3,6 @@ import "../global.css";
 import { SupabaseProvider, ThemeProvider } from "@/contexts";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
-  useQuery,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";

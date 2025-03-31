@@ -1,21 +1,36 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/contexts";
 import { DatePicker } from "react-native-wheel-pick";
 import { SelectModal } from "@/components/common";
-import { add, sub } from "date-fns";
+import { add, sub, format } from "date-fns";
 
 export default function InputDatePicker({
   title,
+  initialValue,
   date,
   setDate,
   width,
   disabled,
   required,
+  withResetButton,
+  minDate,
+  maxDate,
+  placeholder,
 }) {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(date);
+  const [selectedDate, setSelectedDate] = useState(initialValue || date);
   const { getThemeColor } = useTheme();
+
+  const showReset = true;
+
+  // const showReset = useMemo(
+  //   () =>
+  //     format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd") ||
+  //     (initialValue &&
+  //       format(date, "yyyy-MM-dd") !== format(initialValue, "yyyy-MM-dd")),
+  //   [date, selectedDate]
+  // ); 
 
   return (
     <View
@@ -34,7 +49,7 @@ export default function InputDatePicker({
           className="py-[5px] ml-2 mr-1 text-gray-500 grow dark:text-gray-400"
         >
           <Text className="text-gray-500 dark:text-gray-400">
-            {date.toDateString()}
+            {date?.toDateString() || placeholder}
           </Text>
         </Pressable>
 
@@ -43,16 +58,28 @@ export default function InputDatePicker({
           label={title}
           setIsSelectVisible={setIsDatePickerVisible}
           onClose={() => setDate(selectedDate)}
+          RightIcon={
+            withResetButton &&
+            showReset && (
+              <Text
+                className="text-black dark:text-white"
+                onPress={() => {
+                  setSelectedDate(new Date(initialValue));
+                  setDate(new Date(initialValue));
+                }}
+              >
+                Reset
+              </Text>
+            )
+          }
         >
           <DatePicker
-            minimumDate={new Date(sub(date, { years: 1 }))}
-            maximumDate={new Date(add(date, { years: 1 }))}
+            minimumDate={minDate || new Date(sub(date, { years: 1 }))}
+            maximumDate={maxDate || new Date(add(date, { years: 1 }))}
             date={date}
             onDateChange={setSelectedDate}
             textColor={getThemeColor("black", "white")}
-            style={{
-              width: "100%",
-            }}
+            style={{ width: "100%" }}
           />
         </SelectModal>
       </View>

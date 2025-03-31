@@ -4,10 +4,10 @@ export function formatSatisfactionRange({
   cloudyValue,
   rainyValue,
 }) {
-  const includePlus = sunnyValue?.lower?.value < 100;
-  return `${sunnyValue?.lower?.value}${includePlus ? "+ 🌤️" : "🌤️"}, ${
-    partlySunnyValue?.lower?.value
-  } - ${partlySunnyValue?.higher?.value} ⛅, ${cloudyValue?.lower?.value} - ${
-    cloudyValue?.higher?.value
-  } ☁️, ${rainyValue?.lower?.value} - ${rainyValue?.higher?.value} 🌧️`;
+  const includePlus = sunnyValue?.low < 100;
+  return `${sunnyValue?.low}${includePlus ? "+ 🌤️" : "🌤️"}, ${
+    partlySunnyValue?.high
+  } - ${partlySunnyValue?.low} ⛅, ${cloudyValue?.high} - ${
+    cloudyValue?.low
+  } ☁️, ${rainyValue?.high} - ${rainyValue?.low} 🌧️`;
 }
