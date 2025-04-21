@@ -1,8 +1,7 @@
 import { useState, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
-import { SelectModal } from "@/components/common";
+import SelectModal from "./SelectModal";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { useTheme } from "@/contexts";
 
 export default function GradeSelect({
   title = "Grade",
@@ -11,6 +10,7 @@ export default function GradeSelect({
   width,
   disabled,
   required,
+  getThemeColor,
 }) {
   const [isGradeSelectVisible, setIsGradeSelectVisible] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState(100);
@@ -30,6 +30,7 @@ export default function GradeSelect({
       </Text>
       <View className="flex flex-row items-center justify-center p-2 bg-white border-2 border-gray-400 rounded-md dark:bg-black dark:border-gray-700">
         <Pressable
+          disabled={disabled}
           onPress={() => {
             if (disabled) return;
             setIsGradeSelectVisible(true);
@@ -43,6 +44,7 @@ export default function GradeSelect({
             <CancelButton
               setGrade={setGrade}
               setSelectedGrade={setSelectedGrade}
+              getThemeColor={getThemeColor}
             />
           )}
         </Pressable>
@@ -64,8 +66,7 @@ export default function GradeSelect({
   );
 }
 
-const CancelButton = ({ setGrade, setSelectedGrade }) => {
-  const { getThemeColor } = useTheme();
+const CancelButton = ({ setGrade, setSelectedGrade, getThemeColor }) => {
   return (
     <MaterialIcons
       name="cancel"

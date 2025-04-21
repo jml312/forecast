@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useTheme } from "@/contexts";
 import { DatePicker } from "react-native-wheel-pick";
-import { SelectModal } from "@/components/common";
+import SelectModal from "./SelectModal";
 import { add, sub, format } from "date-fns";
 
 export default function InputDatePicker({
@@ -22,15 +22,13 @@ export default function InputDatePicker({
   const [selectedDate, setSelectedDate] = useState(initialValue || date);
   const { getThemeColor } = useTheme();
 
-  const showReset = true;
-
-  // const showReset = useMemo(
-  //   () =>
-  //     format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd") ||
-  //     (initialValue &&
-  //       format(date, "yyyy-MM-dd") !== format(initialValue, "yyyy-MM-dd")),
-  //   [date, selectedDate]
-  // ); 
+  const showReset = useMemo(
+    () =>
+      format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd") ||
+      (initialValue &&
+        format(date, "yyyy-MM-dd") !== format(initialValue, "yyyy-MM-dd")),
+    [date, selectedDate]
+  );
 
   return (
     <View
@@ -49,11 +47,13 @@ export default function InputDatePicker({
           className="py-[5px] ml-2 mr-1 text-gray-500 grow dark:text-gray-400"
         >
           <Text className="text-gray-500 dark:text-gray-400">
-            {date?.toDateString() || placeholder}
+            {date ? date?.toDateString() : placeholder}
           </Text>
         </Pressable>
 
         <SelectModal
+          value={date}
+          setValue={setDate}
           isSelectVisible={isDatePickerVisible}
           label={title}
           setIsSelectVisible={setIsDatePickerVisible}

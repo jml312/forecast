@@ -1,7 +1,11 @@
 import { View, Text, Pressable } from "react-native";
 import { useNavigation } from "expo-router";
 
-export default function ModalHeader({ title, description }) {
+export default function ModalHeader({
+  title,
+  description,
+  closeText = "Cancel",
+}) {
   const navigation = useNavigation();
   return (
     <View>
@@ -10,7 +14,7 @@ export default function ModalHeader({ title, description }) {
         <View />
         <Pressable onPress={navigation.goBack}>
           <Text className="mt-4 mr-[1.15rem] text-black dark:text-white text-md">
-            Cancel
+            {closeText}
           </Text>
         </Pressable>
       </View>

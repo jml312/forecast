@@ -1,3 +1,5 @@
+import { weatherIcons } from "@/constants/weatherIcons";
+
 export function formatSatisfactionRange({
   sunnyValue,
   partlySunnyValue,
@@ -5,9 +7,11 @@ export function formatSatisfactionRange({
   rainyValue,
 }) {
   const includePlus = sunnyValue?.low < 100;
-  return `${sunnyValue?.low}${includePlus ? "+ 🌤️" : "🌤️"}, ${
-    partlySunnyValue?.high
-  } - ${partlySunnyValue?.low} ⛅, ${cloudyValue?.high} - ${
-    cloudyValue?.low
-  } ☁️, ${rainyValue?.high} - ${rainyValue?.low} 🌧️`;
+  return `${sunnyValue?.low}${
+    includePlus ? `+ ${weatherIcons.sunny}` : weatherIcons.sunny
+  }, ${partlySunnyValue?.high} - ${partlySunnyValue?.low} ${
+    weatherIcons.partlySunny
+  }, ${cloudyValue?.high} - ${cloudyValue?.low} ${weatherIcons.cloudy}, ${
+    rainyValue?.high
+  } - ${rainyValue?.low} ${weatherIcons.rainy}`;
 }

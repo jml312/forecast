@@ -1,7 +1,60 @@
 import { supabase } from "@/lib/supabase";
+import { semesters } from "@/constants/semesters";
 
 export async function getClasses() {
-  const { data } = await supabase.from("classes").select("*");
+  const { data } = await supabase.from("classes").select("*, assignments(*)");
 
-  return data;
+  if (!data) {
+    return [];
+  }
+
+  return data.sort((a, b) => {
+    const [termA, yearA] = a.semester.split(" ");
+    const [termB, yearB] = b.semester.split(" ");
+
+    if (yearA !== yearB) return parseInt(yearB) - parseInt(yearA);
+
+    const termDiff = semesters.indexOf(termA) - semesters.indexOf(termB);
+    if (termDiff !== 0) return termDiff;
+
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+}
+
+export async function getAssignments() {
+  const { data } = await supabase
+    .from("assignments")
+    .select("*, classes(*)")
+    .eq("is_completed", false);
+
+  if (!data) {
+    return [];
+  }
+
+  return data.sort((a, b) => {
+    const dateA = new Date(a.due_date);
+    const dateB = new Date(b.due_date);
+
+    if (dateA.getTime() !== dateB.getTime()) {
+      return dateA - dateB;
+    }
+
+    return new Date(a.created_at) - new Date(b.created_at);
+  });
+}
+
+export async function addClass(data) {
+  const { error } = await supabase.from("classes").insert([data]);
+
+  if (error?.message.includes("duplicate key")) {
+    throw new Error("Class already exists");
+  }
+}
+
+export async function addAssignment(data) {
+  const { error } = await supabase.from("assignments").insert([data]);
+
+  if (error?.message.includes("duplicate key")) {
+    throw new Error("Class already exists");
+  }
 }

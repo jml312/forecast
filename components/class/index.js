@@ -1,10 +1,6 @@
 import ColorPicker from "./ColorPicker";
-import { SemesterModal, AddSemesterModal } from "./SemesterModal";
+import SemesterModal from "./SemesterModal";
 import SatisfactionRangesModal from "./SatisfactionRangesModal";
+import Class from "./Class";
 
-export {
-  ColorPicker,
-  SemesterModal,
-  AddSemesterModal,
-  SatisfactionRangesModal,
-};
+export { ColorPicker, SemesterModal, SatisfactionRangesModal, Class };

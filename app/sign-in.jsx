@@ -11,8 +11,10 @@ import { onSignInWithOauth, extractParamsFromUrl, isValidInput } from "@/utils";
 import { object, string } from "yup";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
-import * as Linking from "expo-linking";
 import { openInbox } from "react-native-email-link";
+import { baseErrorToast, baseSuccessToast } from "@/constants/toastConfig";
+import Toast from "react-native-toast-message";
+import * as Linking from "expo-linking";
 
 export default function SignInPage() {
   const { theme, getThemeColor } = useTheme();
@@ -27,7 +29,6 @@ export default function SignInPage() {
     setIsAuthLoading,
   } = useSupabase();
   const [loading, setLoading] = useState(false);
-  const [signInError, setSignInError] = useState("");
   const [modalDetails, setModalDetails] = useState({});
   const {
     value: email,
@@ -55,7 +56,6 @@ export default function SignInPage() {
   useWarmUpBrowser();
 
   async function onSignInWithEmail() {
-    setSignInError("");
     setLoading(true);
 
     const fields = [
@@ -73,45 +73,86 @@ export default function SignInPage() {
 
     const redirectTo = Linking.createURL("/sign-in");
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim(),
       options: {
         emailRedirectTo: redirectTo,
       },
     });
 
     if (error) {
-      setSignInError("Too many requests. Please try again later.");
-      setLoading(false);
-      return;
+      Toast.show({
+        ...baseErrorToast,
+        text2: "Too many requests. Please try again later.",
+      });
+    } else {
+      Toast.show({
+        ...baseSuccessToast,
+        text2: "Check your email for the magic link.",
+        visibilityTime: 5000,
+      });
     }
 
-    setModalDetails({
-      isVisible: true,
-      title: "Magic Link Sent",
-      bodyText: "Check your email to sign in.",
-      actionText: "Ok",
-    });
     setLoading(false);
   }
 
+  // useEffect(() => {
+  //   const handleDeepLink = async ({ url }) => {
+  //     const { access_token, refresh_token } = extractParamsFromUrl(url);
+  //     if (!access_token || !refresh_token) return;
+
+  //     const { error } = await supabase.auth.setSession({
+  //       access_token,
+  //       refresh_token,
+  //     });
+
+  //     if (error) {
+  //       Toast.show({
+  //         ...baseErrorToast,
+  //         text2: "Failed to sign in. Please try again.",
+  //       });
+  //     } else {
+  //       router.replace("/");
+  //     }
+  //   };
+
+  //   Linking.getInitialURL().then((url) => {
+  //     if (url) handleDeepLink({ url });
+  //   });
+
+  //   const sub = Linking.addEventListener("url", handleDeepLink);
+  //   return () => sub.remove();
+  // }, []);
+
   useEffect(() => {
-    Linking.addEventListener("url", async (event) => {
-      const { access_token, refresh_token } = extractParamsFromUrl(event.url);
-      if (isAuthenticated || !access_token || !refresh_token) return;
-      setIsAuthLoading(true);
-      await setSession({
-        access_token,
-        refresh_token,
-      });
+    const handleDeepLink = async ({ url }) => {
+      const { access_token, refresh_token } = extractParamsFromUrl(url);
+      if (!access_token || !refresh_token || isAuthenticated) return;
+
+      setLoading(true);
+      await setSession({ access_token, refresh_token });
       setIsAuthenticated(true);
       setSupabaseUser(access_token);
-      router.push("/");
-      setIsAuthLoading(false);
+      router.replace("/");
+      setLoading(false);
+    };
+
+    Linking.getInitialURL().then((url) => {
+      if (url) handleDeepLink({ url });
     });
+
+    const subscription = Linking.addEventListener("url", handleDeepLink);
+
+    return () => {
+      subscription.remove();
+    };
   }, [isAuthenticated]);
 
   if (isAuthLoading) {
-    return <Loader />;
+    return (
+      <View className="items-center justify-center w-full h-full bg-light-bg dark:bg-dark-bg">
+        <Loader size={50} swapTheme />
+      </View>
+    );
   }
 
   return (
@@ -170,22 +211,17 @@ export default function SignInPage() {
               setValue={(value) => setEmail(value.trim().toLowerCase())}
               error={emailError}
               setError={setEmailError}
-              setPageError={setSignInError}
               disabled={loading}
             />
           </View>
 
           <Button
+            loading={loading}
             onPress={onSignInWithEmail}
             disabled={loading}
             text="Send magic link"
             marginTop="mt-4"
           />
-          {signInError && (
-            <Text className="mt-2 text-lg font-semibold text-red-500 dark:text-red-400">
-              {signInError}
-            </Text>
-          )}
 
           <View className="flex-row items-center justify-center w-full mb-2 -mt-1 overflow-hidden">
             <View className="w-1/2 h-[.5px] my-11 bg-dark-bg dark:bg-light-bg" />
@@ -196,12 +232,14 @@ export default function SignInPage() {
           </View>
 
           <SocialButton
-            onPress={() =>
+            onPress={() => {
+              setEmail("");
+              setEmailError("");
               onSignInWithOauth({
                 provider: "google",
                 ...oAuthSignInParams,
-              })
-            }
+              });
+            }}
             disabled={loading}
             Icon={AntDesign}
             iconName="google"
@@ -210,17 +248,20 @@ export default function SignInPage() {
           />
 
           <SocialButton
-            onPress={() =>
+            onPress={() => {
+              setEmail("");
+              setEmailError("");
               onSignInWithOauth({
                 provider: "apple",
                 ...oAuthSignInParams,
-              })
-            }
+              });
+            }}
             disabled={loading}
             Icon={AntDesign}
             iconName="apple1"
             text="Sign in with Apple"
           />
+          {/* TODO: DELETE */}
           <Pressable
             onPress={() => router.push("/add-class")}
             disabled={loading}

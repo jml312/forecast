@@ -8,6 +8,8 @@ import SelectModal from "./SelectModal";
 import BaseModal from "./BaseModal";
 import NumberInput from "./NumberInput";
 import GradeSelect from "./GradeSelect";
+import Text from "./Text";
+import TextArea from "./TextArea";
 
 export {
   Button,
@@ -20,4 +22,6 @@ export {
   BaseModal,
   NumberInput,
   GradeSelect,
+  Text,
+  TextArea,
 };

@@ -2,7 +2,6 @@ import { View } from "react-native";
 import {
   Input,
   Button,
-  InputDatePicker,
   PageModalHeader,
   ButtonInput,
   GradeSelect,
@@ -13,14 +12,25 @@ import {
   SatisfactionRangesModal,
 } from "@/components/class";
 import { useState } from "react";
-import { useInputField, useDateRange } from "@/hooks";
-import { format } from "date-fns";
-import { formatSatisfactionRange } from "@/utils";
+import { useInputField } from "@/hooks";
+import { formatSatisfactionRange, getRandomAccentColor } from "@/utils";
 import { satisfactionRanges } from "@/constants/satisfactionRanges";
+import { addClass } from "@/queries/classes";
+import Toast from "react-native-toast-message";
+import {
+  toastConfig,
+  baseErrorToast,
+  baseSuccessToast,
+} from "@/constants/toastConfig";
+import { useTheme } from "@/contexts";
+import { useNavigation } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AddClassPage() {
+  const queryClient = useQueryClient();
+  const navigation = useNavigation();
+  const { getThemeColor } = useTheme();
   const [loading, setLoading] = useState(false);
-  const [addClassError, setAddClassError] = useState(false);
   const {
     value: title,
     setValue: setTitle,
@@ -35,13 +45,12 @@ export default function AddClassPage() {
     setError: setSemesterError,
   } = useInputField({
     season: "",
-    startDate: null,
-    endDate: null,
+    year: new Date().getFullYear(),
   });
-  const [semesterOptions, setSemesterOptions] = useState([]);
-  const { startDate, setStartDate, endDate, setEndDate } = useDateRange(false);
   const { value: grade, setValue: setGrade } = useInputField();
-  const { value: accentColor, setValue: setAccentColor } = useInputField();
+  const { value: accentColor, setValue: setAccentColor } = useInputField(
+    getRandomAccentColor()
+  );
   const [sunnyValue, setSunnyValue] = useState(satisfactionRanges.sunny);
   const [partlySunnyValue, setPartlySunnyValue] = useState(
     satisfactionRanges.partlySunny
@@ -59,21 +68,6 @@ export default function AddClassPage() {
   };
 
   const handleSubmit = async () => {
-    // const data = {
-    //   title,
-    //   semester,
-    //   startDate,
-    //   endDate,
-    //   ranges: {
-    //     sunny: sunnyValue,
-    //     partlySunny: partlySunnyValue,
-    //     cloudy: cloudyValue,
-    //     rainy: rainyValue,
-    //   },
-    //   grade,
-    //   accentColor,
-    // };
-
     setLoading(true);
 
     if (!title) {
@@ -89,13 +83,43 @@ export default function AddClassPage() {
       return;
     }
 
-    setLoading(false);
+    try {
+      const data = {
+        title: title.trim().toLowerCase(),
+        semester: `${semester?.season} ${semester?.year}`,
+        satisfaction_ranges: JSON.stringify({
+          sunny: sunnyValue,
+          partlySunny: partlySunnyValue,
+          cloudy: cloudyValue,
+          rainy: rainyValue,
+        }),
+        grade: grade ? Number(grade) : null,
+        accent_color: accentColor.toUpperCase(),
+      };
+      await addClass(data);
+      Toast.show({
+        ...baseSuccessToast,
+        text2: "Your class has been added",
+      });
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      setTimeout(() => {
+        navigation.navigate("classes");
+      }, 1500);
+    } catch (error) {
+      const message =
+        error?.message === "Class already exists"
+          ? "Class already exists"
+          : "Failed to add class";
+      Toast.show({ ...baseErrorToast, text2: message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <View className="flex items-center w-full h-full bg-light-bg dark:bg-dark-bg">
       <PageModalHeader
-        title="Add A Class"
+        title="Add Class"
         description="Enter your class information"
       />
       <View className="w-[80%] flex justify-center gap-8 mt-6">
@@ -117,7 +141,7 @@ export default function AddClassPage() {
             label={"Semester"}
             placeholder={
               semester?.season
-                ? `${semester?.season} ${format(semester?.startDate, "yyyy")}`
+                ? `${semester?.season} ${semester?.year}`
                 : "Select your class semester"
             }
             required
@@ -129,17 +153,12 @@ export default function AddClassPage() {
             setError={setSemesterError}
           />
           <SemesterModal
-            disabled={loading}
-            label={"Semester"}
-            placeholder={"Select your class semester"}
-            value={semester}
-            setValue={setSemester}
-            items={semesterOptions}
-            setItems={setSemesterOptions}
-            required
-            isSelectVisible={isSelectVisible}
-            setIsSelectVisible={setIsSelectVisible}
-            loading={loading}
+            semester={semester}
+            setSemester={setSemester}
+            semesterError={semesterError}
+            setSemesterError={setSemesterError}
+            isVisible={isSelectVisible}
+            setIsVisible={setIsSelectVisible}
           />
         </>
         <>
@@ -151,7 +170,6 @@ export default function AddClassPage() {
               cloudyValue,
               rainyValue,
             })}
-            required
             onPress={() => {
               if (loading) return;
               setIsSatisfactionVisible(true);
@@ -172,15 +190,26 @@ export default function AddClassPage() {
             resetSatisfactionRanges={resetSatisfactionRanges}
           />
         </>
-        <GradeSelect grade={grade} setGrade={setGrade} />
-        <ColorPicker value={accentColor} setValue={setAccentColor} />
+        <GradeSelect
+          grade={grade}
+          setGrade={setGrade}
+          getThemeColor={getThemeColor}
+          disabled={loading}
+        />
+        <ColorPicker
+          value={accentColor}
+          setValue={setAccentColor}
+          disabled={loading}
+        />
         <Button
           text="Add Class"
           disabled={loading}
           marginTop="mt-3"
           onPress={handleSubmit}
+          loading={loading}
         />
       </View>
+      <Toast config={toastConfig} />
     </View>
   );
 }

@@ -17,7 +17,7 @@ export default function SocialButton({
       onPress={onPress}
       disabled={disabled}
       className={clsx(
-        "flex-row items-center justify-center w-full py-4 border-2 rounded-md border-dark dark:border-light mb-2",
+        "flex-row items-center justify-center w-full py-4 border-[0.9px] rounded-md bg-dark-bg dark:bg-light-bg mb-2",
         marginTop,
         marginBottom
       )}
@@ -26,9 +26,9 @@ export default function SocialButton({
         <Icon
           name={iconName}
           size={24}
-          color={getThemeColor("black", "white")}
+          color={getThemeColor("white", "black")}
         />
-        <Text className="font-semibold text-black dark:text-white text-md">
+        <Text className="font-semibold text-white dark:text-black text-md">
           {text}
         </Text>
       </View>

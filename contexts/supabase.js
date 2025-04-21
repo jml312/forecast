@@ -1,9 +1,8 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import "core-js/stable/atob";
 import { jwtDecode } from "jwt-decode";
 import { getUserByEmail } from "@/queries/users";
 import Constants from "expo-constants";
-
 import { supabase } from "@/lib/supabase";
 
 export const SupabaseContext = createContext({

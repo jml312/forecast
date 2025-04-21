@@ -15,7 +15,6 @@ export default function Input({
   setValue,
   error,
   setError,
-  setPageError,
   disabled,
   autoFocus,
 }) {
@@ -27,7 +26,7 @@ export default function Input({
   return (
     <>
       <Text className="mb-1 text-black text-md dark:text-white">{label}</Text>
-      <View className="flex flex-row items-center justify-center p-2 border-2 border-gray-400 rounded-md bg-white dark:bg-black dark:border-gray-700">
+      <View className="flex flex-row items-center justify-center p-2 bg-white border-2 border-gray-400 rounded-md dark:bg-black dark:border-gray-700">
         <LeftIcon
           name={leftIconName}
           size={20}
@@ -41,16 +40,17 @@ export default function Input({
           value={value}
           onChangeText={(val) => {
             setError("");
-            setPageError("");
             setValue(val);
           }}
-          disabled={disabled}
+          editable={!disabled}
           className="py-[5px] ml-2 mr-1 text-gray-500 grow dark:text-gray-400 placeholder:text-gray-500 dark:placeholder:text-gray-400"
           secureTextEntry={isPassword && !showPassword}
           inputMode={isPassword ? "password" : inputMode}
           ref={inputRef}
           autoCapitalize={label === "Name" && "words"}
           autoFocus={autoFocus}
+          autoComplete="off"
+          autoCorrect={false}
         />
         {isPassword && (
           <Pressable
