@@ -10,6 +10,7 @@ import NumberInput from "./NumberInput";
 import GradeSelect from "./GradeSelect";
 import Text from "./Text";
 import TextArea from "./TextArea";
+import Switch from "./Switch";
 
 export {
   Button,
@@ -24,4 +25,5 @@ export {
   GradeSelect,
   Text,
   TextArea,
+  Switch,
 };

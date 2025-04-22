@@ -1,10 +1,10 @@
-import { View } from "react-native";
+import { View, Pressable, Text as RnText } from "react-native";
 import {
   Input,
-  Button,
   PageModalHeader,
   ButtonInput,
   GradeSelect,
+  Switch,
 } from "@/components/common";
 import {
   SemesterModal,
@@ -13,7 +13,11 @@ import {
 } from "@/components/class";
 import { useState } from "react";
 import { useInputField } from "@/hooks";
-import { formatSatisfactionRange, getRandomAccentColor } from "@/utils";
+import {
+  formatSatisfactionRange,
+  getRandomAccentColor,
+  capitalize,
+} from "@/utils";
 import { satisfactionRanges } from "@/constants/satisfactionRanges";
 import { addClass } from "@/queries/classes";
 import Toast from "react-native-toast-message";
@@ -23,33 +27,46 @@ import {
   baseSuccessToast,
 } from "@/constants/toastConfig";
 import { useTheme } from "@/contexts";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useQueryClient } from "@tanstack/react-query";
+import clsx from "clsx";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export default function AddClassPage() {
+export default function EditClass() {
+  const params = useLocalSearchParams();
   const queryClient = useQueryClient();
   const router = useRouter();
   const { getThemeColor } = useTheme();
   const [loading, setLoading] = useState(false);
+  console.log(params);
   const {
     value: title,
     setValue: setTitle,
     error: titleError,
     setError: setTitleError,
     ref: titleRef,
-  } = useInputField();
+  } = useInputField(capitalize(params?.title) || "");
   const {
     value: semester,
     setValue: setSemester,
     error: semesterError,
     setError: setSemesterError,
-  } = useInputField({
-    season: "",
-    year: new Date().getFullYear(),
-  });
-  const { value: grade, setValue: setGrade } = useInputField();
+  } = useInputField(
+    params?.semester
+      ? {
+          season: params?.semester?.split(" ")[0],
+          year: Number(params?.semester?.split(" ")[1]),
+        }
+      : {
+          season: "",
+          year: new Date().getFullYear(),
+        }
+  );
+  const { value: grade, setValue: setGrade } = useInputField(
+    !isNaN(params?.grade) ? Number(params?.grade) : null
+  );
   const { value: accentColor, setValue: setAccentColor } = useInputField(
-    getRandomAccentColor()
+    params?.accentColor?.toLowerCase() || getRandomAccentColor()
   );
   const [sunnyValue, setSunnyValue] = useState(satisfactionRanges.sunny);
   const [partlySunnyValue, setPartlySunnyValue] = useState(
@@ -59,6 +76,9 @@ export default function AddClassPage() {
   const [rainyValue, setRainyValue] = useState(satisfactionRanges.rainy);
   const [isSelectVisible, setIsSelectVisible] = useState(false);
   const [isSatisfactionVisible, setIsSatisfactionVisible] = useState(false);
+  const [isClassCompleted, setIsClassCompleted] = useState(
+    !!params?.isCompleted ? params?.isCompleted : false
+  );
 
   const resetSatisfactionRanges = () => {
     setSunnyValue(satisfactionRanges.sunny);
@@ -67,62 +87,35 @@ export default function AddClassPage() {
     setRainyValue(satisfactionRanges.rainy);
   };
 
-  const handleSubmit = async () => {
-    setLoading(true);
+  const isClassChanged = false;
 
-    if (!title) {
-      titleRef?.current?.focus();
-      setTitleError("Please enter your class title");
-      setLoading(false);
-      return;
-    }
-
-    if (!semester?.season) {
-      setSemesterError("Please select your class semester");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const data = {
-        title: title.trim().toLowerCase(),
-        semester: `${semester?.season} ${semester?.year}`,
-        satisfaction_ranges: JSON.stringify({
-          sunny: sunnyValue,
-          partlySunny: partlySunnyValue,
-          cloudy: cloudyValue,
-          rainy: rainyValue,
-        }),
-        grade: grade ? Number(grade) : null,
-        accent_color: accentColor.toUpperCase(),
-      };
-      await addClass(data);
-      Toast.show({
-        ...baseSuccessToast,
-        text2: "Your class has been added",
-      });
-      queryClient.invalidateQueries({ queryKey: ["classes"] });
-      setTimeout(() => {
-        router.replace("/classes");
-      }, 1500);
-    } catch (error) {
-      const message =
-        error?.message === "Class already exists"
-          ? "Class already exists"
-          : "Failed to add class";
-      Toast.show({ ...baseErrorToast, text2: message });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleUpdate = async () => {};
+  const handleDelete = async () => {};
 
   return (
     <View className="flex items-center w-full h-full bg-light-bg dark:bg-dark-bg">
       <PageModalHeader
-        title="Add Class"
-        description="Enter your class information"
+        title="Your Class"
+        description={"Edit or delete your class"}
+        closeText="Close"
       />
       <View className="w-[80%] flex justify-center gap-8 mt-6">
+        <Switch
+          label={"Completed"}
+          flip
+          switchContainerClassName="-ml-1"
+          containerClassName={"self-start -mb-2"}
+          scale={0.75}
+          showValue
+          value={
+            typeof isClassCompleted === "string"
+              ? isClassCompleted === "true"
+              : isClassCompleted
+          }
+          onValueChange={setIsClassCompleted}
+          onText={"Yes"}
+          offText={"No"}
+        />
         <Input
           label="Title"
           placeholder="Enter your class title"
@@ -201,13 +194,40 @@ export default function AddClassPage() {
           setValue={setAccentColor}
           disabled={loading}
         />
-        <Button
-          text="Add Class"
-          disabled={loading}
-          marginTop="mt-0"
-          onPress={handleSubmit}
-          loading={loading}
-        />
+        <View className="flex justify-center gap-3 mt-0">
+          <Pressable
+            className={clsx(
+              "flex-row items-center justify-center w-full py-4 rounded-md gap-0.5 -mt-1 bg-dark-bg dark:bg-light-bg",
+              isClassChanged ? "opacity-100" : "opacity-50"
+            )}
+            onPress={handleUpdate}
+          >
+            <FontAwesome
+              name="save"
+              size={16}
+              color={getThemeColor("#FFFFFF", "#000000")}
+              style={{ marginRight: 4 }}
+            />
+            <RnText className="font-medium text-center text-white text-md dark:text-black">
+              Save
+            </RnText>
+          </Pressable>
+
+          <Pressable
+            className="flex-row items-center justify-center w-full py-4 bg-red-500 rounded-md gap-0.5"
+            onPress={handleDelete}
+          >
+            <FontAwesome
+              name="trash"
+              size={16}
+              color={getThemeColor("#FFFFFF", "#000000")}
+              style={{ marginRight: 4 }}
+            />
+            <RnText className="font-medium text-center text-white text-md dark:text-black">
+              Delete
+            </RnText>
+          </Pressable>
+        </View>
       </View>
       <Toast config={toastConfig} />
     </View>

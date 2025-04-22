@@ -1,33 +1,38 @@
-import { View } from "react-native";
 import {
   PageModalHeader,
   Input,
-  GradeSelect,
   ButtonInput,
   SelectModal,
   InputDatePicker,
-  Button,
   TextArea,
+  GradeSelect,
+  Switch,
 } from "@/components/common";
+import { View, Pressable, Text as RnText } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useInputField } from "@/hooks";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { updateAssignment, deleteAssignment } from "@/queries/classes";
+import { assignmentTypes } from "@/constants/assignmentTypes";
+import { capitalize } from "@/utils";
+import { add } from "date-fns";
 import Toast from "react-native-toast-message";
 import {
   toastConfig,
   baseSuccessToast,
   baseErrorToast,
 } from "@/constants/toastConfig";
-import { useInputField } from "@/hooks";
-import { useState, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { assignmentTypes } from "@/constants/assignmentTypes";
-import { capitalize } from "@/utils";
-import { addAssignment } from "@/queries/classes";
-import { add } from "date-fns";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useTheme } from "@/contexts";
+import clsx from "clsx";
+import { toDate } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
 
-export default function AddAssignmentPage() {
+export default function EditAssignment() {
   const { getThemeColor } = useTheme();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const queryClient = useQueryClient();
   const classTitles = useMemo(
     () =>
@@ -58,13 +63,13 @@ export default function AddAssignmentPage() {
     error: titleError,
     setError: setTitleError,
     ref: titleRef,
-  } = useInputField();
+  } = useInputField(capitalize(params?.title) || "");
   const {
     value: type,
     setValue: setType,
     error: typeError,
     setError: setTypeError,
-  } = useInputField();
+  } = useInputField(capitalize(params?.type) || "");
   const [selectedType, setSelectedType] = useState("");
   const [isTypeVisible, setIsTypeVisible] = useState(false);
   const {
@@ -72,16 +77,59 @@ export default function AddAssignmentPage() {
     setValue: setDueDate,
     error: dueDateError,
     setError: setDueDateError,
-  } = useInputField(add(new Date(), { days: 1 }));
+  } = useInputField(
+    params?.dueDate ? toDate(params.dueDate.split(" ")[0]) : now
+  );
+
   const {
     value: notes,
     setValue: setNotes,
     error: notesError,
     setError: setNotesError,
-  } = useInputField();
+  } = useInputField(params?.notes ? params?.notes : "");
   const { value: grade, setValue: setGrade } = useInputField();
+  const [isClassCompleted, setIsClassCompleted] = useState(
+    !!params?.isCompleted ? params?.isCompleted : false
+  );
 
-  const handleSubmit = async () => {
+  const now = useMemo(() => new Date(), []);
+
+  const isClassChanged = useMemo(
+    () =>
+      // new
+      JSON.stringify({
+        id: Number(params?.id),
+        title: title.trim().toLowerCase(),
+        type: type.toUpperCase(),
+        notes: notes.trim(),
+        grade: grade ? Number(grade) : null,
+        class_id: Number(classId),
+        is_completed: isClassCompleted.toString(),
+      }) !==
+        // original
+        JSON.stringify({
+          id: Number(params?.id),
+          title: params?.title.toLocaleLowerCase() || "",
+          type: capitalize(params?.type) || "",
+          notes: params?.notes || "",
+          grade: params?.grade ? Number(params?.grade) : null,
+          class_id: Number(classId),
+          is_completed: !!params?.isCompleted ? params?.isCompleted : false,
+        }) ||
+      formatInTimeZone(dueDate, "UTC", "yyyy-MM-dd'T'HH:mm:ssXXX") !==
+        formatInTimeZone(
+          params?.dueDate
+            ? toDate(params.dueDate.split(" ")[0])
+            : add(now, { days: 1 }),
+          "UTC",
+          "yyyy-MM-dd'T'HH:mm:ssXXX"
+        ),
+    [params, title, type, dueDate, notes, grade, classId, isClassCompleted]
+  );
+
+  const handleUpdate = async () => {
+    if (!isClassChanged) return;
+
     setLoading(true);
 
     if (!userClass) {
@@ -111,16 +159,17 @@ export default function AddAssignmentPage() {
 
     try {
       const data = {
+        id: Number(params?.id),
         title: title.trim().toLowerCase(),
         type: type.toUpperCase(),
         due_date: dueDate,
         notes: notes.trim(),
         grade: grade ? Number(grade) : null,
         class_id: Number(classId),
+        is_completed: isClassCompleted,
       };
 
-      await addAssignment(data);
-
+      await updateAssignment(data);
       Toast.show({
         ...baseSuccessToast,
         text2: "Your assignment has been added",
@@ -132,8 +181,8 @@ export default function AddAssignmentPage() {
       }, 1500);
     } catch (error) {
       const message =
-        error?.message === "Class already exists"
-          ? "Class already exists"
+        error?.message === "Assignment already exists"
+          ? "Assignment already exists"
           : "Failed to add class";
       Toast.show({ ...baseErrorToast, text2: message });
     } finally {
@@ -141,13 +190,51 @@ export default function AddAssignmentPage() {
     }
   };
 
+  const handleDelete = async () => {
+    setLoading(true);
+    try {
+      await deleteAssignment(Number(params?.id));
+      Toast.show({
+        ...baseSuccessToast,
+        text2: "Your assignment has been deleted",
+      });
+      queryClient.invalidateQueries({ queryKey: ["classes"] });
+      queryClient.invalidateQueries({ queryKey: ["assignments"] });
+      setTimeout(() => {
+        router.back();
+      }, 1500);
+    } catch {
+      Toast.show({ ...baseErrorToast, text2: "Failed to delete assignment" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <View className="flex items-center w-full h-full bg-light-bg dark:bg-dark-bg">
+    <View className="relative flex items-center w-full h-full bg-light-bg dark:bg-dark-bg">
       <PageModalHeader
-        title="Add Assignment"
-        description="Enter your assignment information"
+        title="Your Assignment"
+        description={"Edit or delete your assignment"}
+        closeText="Close"
       />
+
       <View className="w-[80%] flex justify-center gap-5 mt-6">
+        <Switch
+          label={"Completed"}
+          flip
+          switchContainerClassName="-ml-1"
+          containerClassName={"self-start -mb-1"}
+          scale={0.75}
+          showValue
+          value={
+            typeof isClassCompleted === "string"
+              ? isClassCompleted === "true"
+              : isClassCompleted
+          }
+          onValueChange={setIsClassCompleted}
+          onText={"Yes"}
+          offText={"No"}
+        />
         <ButtonInput
           label={"Class"}
           placeholder={"Select your class"}
@@ -179,7 +266,7 @@ export default function AddAssignmentPage() {
           label="Title"
           placeholder="Enter your assignment title"
           error={titleError}
-          value={title}
+          value={capitalize(title.toLowerCase())}
           setValue={setTitle}
           setError={setTitleError}
           disabled={loading}
@@ -199,7 +286,7 @@ export default function AddAssignmentPage() {
           }}
           error={typeError}
           setError={setTypeError}
-          value={type}
+          value={capitalize(type.toLowerCase())}
           setValue={setType}
           disabled={loading}
         />
@@ -220,6 +307,8 @@ export default function AddAssignmentPage() {
         />
 
         <InputDatePicker
+          // showReset
+          initialValue={params?.dueDate}
           title={"Due Date"}
           placeholder={"Select your assignment due date"}
           required={true}
@@ -230,8 +319,8 @@ export default function AddAssignmentPage() {
           disabled={loading}
           date={dueDate}
           setDate={setDueDate}
-          minDate={new Date()}
-          maxDate={add(new Date(), { months: 6 })}
+          minDate={now}
+          maxDate={add(now, { months: 6 })}
         />
         <GradeSelect
           grade={grade}
@@ -251,13 +340,38 @@ export default function AddAssignmentPage() {
           maxLength={1000}
         />
 
-        <Button
-          text="Add Assignment"
-          disabled={loading}
-          marginTop="-mt-0.5"
-          onPress={handleSubmit}
-          loading={loading}
-        />
+        <Pressable
+          className={clsx(
+            "flex-row items-center justify-center w-full py-4 rounded-md gap-0.5 -mt-1 bg-dark-bg dark:bg-light-bg",
+            isClassChanged ? "opacity-100" : "opacity-50"
+          )}
+          onPress={handleUpdate}
+        >
+          <FontAwesome
+            name="save"
+            size={16}
+            color={getThemeColor("#FFFFFF", "#000000")}
+            style={{ marginRight: 4 }}
+          />
+          <RnText className="font-medium text-center text-white text-md dark:text-black">
+            Save
+          </RnText>
+        </Pressable>
+
+        <Pressable
+          className="flex-row items-center justify-center w-full py-4 bg-red-500 rounded-md gap-0.5 -mt-2"
+          onPress={handleDelete}
+        >
+          <FontAwesome
+            name="trash"
+            size={16}
+            color={getThemeColor("#FFFFFF", "#000000")}
+            style={{ marginRight: 4 }}
+          />
+          <RnText className="font-medium text-center text-white text-md dark:text-black">
+            Delete
+          </RnText>
+        </Pressable>
       </View>
 
       <Toast config={toastConfig} />

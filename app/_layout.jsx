@@ -32,7 +32,11 @@ export default function RootLayout() {
                 options={{ presentation: "modal", headerShown: false }}
               />
               <Stack.Screen
-                name="class-settings"
+                name="edit-class"
+                options={{ presentation: "modal", headerShown: false }}
+              />
+              <Stack.Screen
+                name="edit-assignment"
                 options={{ presentation: "modal", headerShown: false }}
               />
 

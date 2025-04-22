@@ -44,6 +44,27 @@ export const toastConfig = {
       />
     );
   },
+  info: (props) => {
+    const { getThemeColor } = useTheme();
+    return (
+      <BaseToast
+        {...props}
+        style={{
+          borderLeftColor: getThemeColor("#facc15", "#fcd34d"),
+          backgroundColor: getThemeColor("white", "black"),
+        }}
+        text1Style={{
+          color: getThemeColor("black", "white"),
+          fontSize: 16,
+          fontWeight: "600",
+        }}
+        text2Style={{
+          color: getThemeColor("black", "white"),
+          fontSize: 14,
+        }}
+      />
+    );
+  },
 };
 
 export const baseSuccessToast = {
@@ -57,6 +78,14 @@ export const baseSuccessToast = {
 export const baseErrorToast = {
   type: "error",
   text1: "Error",
+  position: "bottom",
+  visibilityTime: 4000,
+  autoHide: true,
+};
+
+export const baseInfoToast = {
+  type: "info",
+  text1: "Info",
   position: "bottom",
   visibilityTime: 4000,
   autoHide: true,

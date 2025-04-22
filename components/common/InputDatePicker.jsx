@@ -17,18 +17,20 @@ export default function InputDatePicker({
   minDate,
   maxDate,
   placeholder,
+  formatString = "EEEE MMMM dd, yyyy",
 }) {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(initialValue || date);
   const { getThemeColor } = useTheme();
 
-  const showReset = useMemo(
-    () =>
-      format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd") ||
-      (initialValue &&
-        format(date, "yyyy-MM-dd") !== format(initialValue, "yyyy-MM-dd")),
-    [date, selectedDate]
-  );
+  const showReset = true;
+  // const showReset = useMemo(
+  //   () =>
+  //     format(date, "yyyy-MM-dd") !== format(selectedDate, "yyyy-MM-dd") ||
+  //     (initialValue &&
+  //       format(date, "yyyy-MM-dd") !== format(initialValue, "yyyy-MM-dd")),
+  //   [date, selectedDate]
+  // );
 
   return (
     <View
@@ -47,7 +49,7 @@ export default function InputDatePicker({
           className="py-[5px] ml-2 mr-1 text-gray-500 grow dark:text-gray-400"
         >
           <Text className="text-gray-500 dark:text-gray-400">
-            {date ? date?.toDateString() : placeholder}
+            {date ? format(date, formatString) : placeholder}
           </Text>
         </Pressable>
 
@@ -64,8 +66,10 @@ export default function InputDatePicker({
               <Text
                 className="text-black dark:text-white"
                 onPress={() => {
-                  setSelectedDate(new Date(initialValue));
-                  setDate(new Date(initialValue));
+                  setSelectedDate(initialValue);
+                  setDate(initialValue);
+                  // setSelectedDate(new Date(initialValue));
+                  // setDate(new Date(initialValue));
                 }}
               >
                 Reset
