@@ -23,9 +23,9 @@ export default function Assignment({ data, accentColor }) {
     <Pressable
       className={clsx(
         "flex p-4 mb-2 border-2 border-gray-300 rounded-md dark:border-gray-700 border-l-4",
-        data.is_completed
-          ? "bg-[#E5E7EB] dark:bg-[#3A3A3A]"
-          : "bg-light-bg dark:bg-dark-bg"
+        // data.is_completed
+        //   ? "bg-[#E5E7EB] dark:bg-[#3A3A3A]"
+        //   : "bg-light-bg dark:bg-dark-bg"
       )}
       style={{
         borderLeftColor: accentColor,
@@ -72,6 +72,10 @@ export default function Assignment({ data, accentColor }) {
           <Text className="font-light text-md">{data.notes}</Text>
         </View>
       )}
+
+      <Text className={"p-2 bg-red-500 w- rounded-md"}>
+        {data.is_completed ? "Completed" : "Upcoming"}
+      </Text>
     </Pressable>
   );
 }

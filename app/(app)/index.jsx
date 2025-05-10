@@ -1,4 +1,4 @@
-import { View, SafeAreaView } from "react-native";
+import { View, SafeAreaView, ScrollView } from "react-native";
 import { Text, Loader, Switch } from "@/components/common";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -66,9 +66,13 @@ export default function Assignments() {
           </Text>
         </View>
       )}
-      <SafeAreaView className="flex-1 w-[85%] mt-5">
+      <View className="flex-1 w-[85%] mt-3">
         {filteredAssignments?.length > 0 ? (
-          <View className="flex-1 gap-2">
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            className="flex-1 mb-3"
+            contentContainerStyle={{ gap: 6 }}
+          >
             {filteredAssignments
               ?.sort((a, b) => {
                 if (a.is_completed !== b.is_completed) {
@@ -82,15 +86,15 @@ export default function Assignments() {
                   accentColor={assignment.accentColor.toLowerCase()}
                 />
               ))}
-          </View>
+          </ScrollView>
         ) : (
           <View className="flex items-center justify-center w-full h-full">
             <Text className={"text-lg font-bold text-center"}>
-              No assignments found
+              No assignments
             </Text>
           </View>
         )}
-      </SafeAreaView>
+      </View>
     </SafeAreaView>
   );
 }

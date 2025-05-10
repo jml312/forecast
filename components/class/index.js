@@ -3,6 +3,7 @@ import SemesterModal from "./SemesterModal";
 import SatisfactionRangesModal from "./SatisfactionRangesModal";
 import Class from "./Class";
 import Assignment from "./Assignment";
+import ClassCard from "./ClassCard";
 
 export {
   ColorPicker,
@@ -10,4 +11,5 @@ export {
   SatisfactionRangesModal,
   Class,
   Assignment,
+  ClassCard,
 };

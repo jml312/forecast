@@ -46,8 +46,6 @@ export default function Class({ data }) {
 
       <View className="flex-1">
         <View
-          // className="w-full h-[30%] items-center justify-center"
-          // style={{ backgroundColor: data.accent_color.toLowerCase() }}
           style={{
             backgroundColor: data.accent_color.toLowerCase(),
             height: "30%",
@@ -78,8 +76,6 @@ export default function Class({ data }) {
               color={getThemeColor("#000000", "#FFFFFF")}
             />
           </View>
-
-          {/* </SafeAreaView> */}
         </View>
 
         <View className="flex w-full gap-6 p-8 -mt-6 bg-light-bg dark:bg-dark-bg rounded-t-3xl">
@@ -108,10 +104,11 @@ export default function Class({ data }) {
             <Text className="text-[1.75rem] font-normal">
               {data?.grade ? `${data.grade}%` : "-"}
             </Text>
+            <Text className="text-lg font-light">{data?.semester}</Text>
           </View>
 
           {/* Assignments */}
-          <View className="-mt-0.5">
+          <View className="-mt-1.5">
             <View className="flex-row items-center justify-between -mt-2">
               <Text className={"font-medium text-xl"}>Assignments</Text>
               <Switch
